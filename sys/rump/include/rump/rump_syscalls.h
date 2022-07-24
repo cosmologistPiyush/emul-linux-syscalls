@@ -1,4 +1,4 @@
-/* $NetBSD: rump_syscalls.h,v 1.126 2021/11/01 05:26:28 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call protos in rump namespace.
@@ -772,6 +772,10 @@
 #define RUMP_SYS_RENAME_SOCKETPAIR rump___sysimpl_socketpair
 #endif
 
+#ifndef RUMP_SYS_RENAME_SPLICEV
+#define RUMP_SYS_RENAME_SPLICEV rump___sysimpl_splicev
+#endif
+
 #ifndef RUMP_SYS_RENAME_STAT
 #define RUMP_SYS_RENAME_STAT rump___sysimpl_stat50
 #endif
@@ -868,6 +872,7 @@ struct itimerspec;
 struct quotactl_args;
 struct mmsghdr;
 struct statvfs;
+struct spliceops;
 
 ssize_t rump_sys_read(int, void *, size_t) __RENAME(RUMP_SYS_RENAME_READ);
 ssize_t rump_sys_write(int, const void *, size_t) __RENAME(RUMP_SYS_RENAME_WRITE);
@@ -1078,6 +1083,7 @@ int rump_sys_statvfs1(const char *, struct statvfs *, int) __RENAME(RUMP_SYS_REN
 int rump_sys_fstatvfs1(int, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FSTATVFS1);
 int rump_sys_fhstatvfs1(const void *, size_t, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FHSTATVFS1);
 long rump_sys_lpathconf(const char *, int) __RENAME(RUMP_SYS_RENAME_LPATHCONF);
+int rump_sys_splicev(int, int, int, size_t, struct spliceops *) __RENAME(RUMP_SYS_RENAME_SPLICEV);
 int rump_sys_pipe(int *);
 
 #endif /* _RUMP_RUMP_SYSCALLS_H_ */

@@ -1,4 +1,4 @@
-/* $NetBSD: syscalls.c,v 1.327 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call names.
@@ -8,7 +8,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: syscalls.c,v 1.327 2021/11/01 05:26:27 thorpej Exp $");
+__KERNEL_RCSID(0, "$NetBSD$");
 
 #if defined(_KERNEL_OPT)
 #ifdef _KERNEL_OPT
@@ -550,7 +550,7 @@ const char *const syscallnames[] = {
 	/* 497 */	"__acl_aclcheck_file",
 	/* 498 */	"__acl_aclcheck_fd",
 	/* 499 */	"lpathconf",
-	/* 500 */	"# filler",
+	/* 500 */	"splicev",
 	/* 501 */	"# filler",
 	/* 502 */	"# filler",
 	/* 503 */	"# filler",
@@ -1087,7 +1087,7 @@ const char *const altsyscallnames[] = {
 	/* 497 */	NULL, /* __acl_aclcheck_file */
 	/* 498 */	NULL, /* __acl_aclcheck_fd */
 	/* 499 */	NULL, /* lpathconf */
-	/* 500 */	NULL, /* filler */
+	/* 500 */	NULL, /* splicev */
 	/* 501 */	NULL, /* filler */
 	/* 502 */	NULL, /* filler */
 	/* 503 */	NULL, /* filler */

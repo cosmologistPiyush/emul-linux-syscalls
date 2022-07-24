@@ -1049,3 +1049,5 @@
 498	STD		{ int|sys||__acl_aclcheck_fd(int filedes, \
 			    acl_type_t type, struct acl *aclp); }
 499	STD	RUMP	{ long|sys||lpathconf(const char *path, int name); }
+500 STD	RUMP	{ int|sys||splicev(int fd_in, int off_in, int fd_out, \
+				size_t len, struct spliceops* ops); }

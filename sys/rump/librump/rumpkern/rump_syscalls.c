@@ -1,4 +1,4 @@
-/* $NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call vector and marshalling for rump.
@@ -15,7 +15,7 @@
 
 #ifdef __NetBSD__
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $");
+__KERNEL_RCSID(0, "$NetBSD$");
 
 #include <sys/fstypes.h>
 #include <sys/proc.h>
@@ -6612,6 +6612,38 @@ __weak_alias(_lpathconf,rump___sysimpl_lpathconf);
 __strong_alias(_sys_lpathconf,rump___sysimpl_lpathconf);
 #endif /* RUMP_KERNEL_IS_LIBC */
 
+int rump___sysimpl_splicev(int, int, int, size_t, struct spliceops *);
+int
+rump___sysimpl_splicev(int fd_in, int off_in, int fd_out, size_t len, struct spliceops * ops)
+{
+	register_t retval[2];
+	int error = 0;
+	int rv = -1;
+	struct sys_splicev_args callarg;
+
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, fd_in) = fd_in;
+	SPARG(&callarg, off_in) = off_in;
+	SPARG(&callarg, fd_out) = fd_out;
+	SPARG(&callarg, len) = len;
+	SPARG(&callarg, ops) = ops;
+
+	error = rsys_syscall(SYS_splicev, &callarg, sizeof(callarg), retval);
+	rsys_seterrno(error);
+	if (error == 0) {
+		if (sizeof(int) > sizeof(register_t))
+			rv = *(int *)retval;
+		else
+			rv = *retval;
+	}
+	return rv;
+}
+#ifdef RUMP_KERNEL_IS_LIBC
+__weak_alias(splicev,rump___sysimpl_splicev);
+__weak_alias(_splicev,rump___sysimpl_splicev);
+__strong_alias(_sys_splicev,rump___sysimpl_splicev);
+#endif /* RUMP_KERNEL_IS_LIBC */
+
 int rump_sys_pipe(int *);
 int
 rump_sys_pipe(int *fd)
@@ -8571,9 +8603,9 @@ struct sysent rump_sysent[] = {
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 499 = lpathconf */
 	{
-		.sy_flags = SYCALL_NOSYS,
+		ns(struct sys_splicev_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 500 = filler */
+	},		/* 500 = splicev */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,

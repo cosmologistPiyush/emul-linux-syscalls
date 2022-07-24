@@ -1,4 +1,4 @@
-/* $NetBSD: systrace_args.c,v 1.49 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument to DTrace register array conversion.
@@ -3885,6 +3885,17 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		uarg[0] = (intptr_t) SCARG(p, path); /* const char * */
 		iarg[1] = SCARG(p, name); /* int */
 		*n_args = 2;
+		break;
+	}
+	/* sys_splicev */
+	case 500: {
+		const struct sys_splicev_args *p = params;
+		iarg[0] = SCARG(p, fd_in); /* int */
+		iarg[1] = SCARG(p, off_in); /* int */
+		iarg[2] = SCARG(p, fd_out); /* int */
+		uarg[3] = SCARG(p, len); /* size_t */
+		uarg[4] = (intptr_t) SCARG(p, ops); /* struct spliceops * */
+		*n_args = 5;
 		break;
 	}
 	default:
@@ -10492,6 +10503,28 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+	/* sys_splicev */
+	case 500:
+		switch(ndx) {
+		case 0:
+			p = "int";
+			break;
+		case 1:
+			p = "int";
+			break;
+		case 2:
+			p = "int";
+			break;
+		case 3:
+			p = "size_t";
+			break;
+		case 4:
+			p = "struct spliceops *";
+			break;
+		default:
+			break;
+		};
+		break;
 	default:
 		break;
 	};
@@ -12693,6 +12726,11 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 	case 499:
 		if (ndx == 0 || ndx == 1)
 			p = "long";
+		break;
+	/* sys_splicev */
+	case 500:
+		if (ndx == 0 || ndx == 1)
+			p = "int";
 		break;
 	default:
 		break;
