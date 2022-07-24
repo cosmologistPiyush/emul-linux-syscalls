@@ -1,56 +1,13 @@
-NetBSD
-======
+# Emulating missing Linux syscalls in The NetBSD Kernel
 
-NetBSD is a free, fast, secure, and highly portable Unix-like Open
-Source operating system.  It is available for a [wide range of
-platforms](https://wiki.NetBSD.org/ports/), from large-scale servers
-and powerful desktop systems to handheld and embedded devices.
+This project is a part of the **Google Summer of Code 2022**. More details about
+this project can be found at:
+- [GSoC22](https://summerofcode.withgoogle.com/programs/2022/projects/37Q8OZNU)
+- [NetBSD](https://wiki.netbsd.org/projects/project/linux_timer/)
 
-Building
---------
+This repository is a clone of the [NetBSD GitHub src](https://github.com/NetBSD/src).
 
-You can cross-build NetBSD from most UNIX-like operating systems.
-To build for amd64 (x86_64), in the src directory:
-
-    ./build.sh -U -u -j4 -m amd64 -O ~/obj release
-
-Additional build information available in the [BUILDING](BUILDING) file.
-
-Binaries
---------
-
-- [Daily builds](https://nycdn.NetBSD.org/pub/NetBSD-daily/HEAD/latest/)
-- [Releases](https://cdn.NetBSD.org/pub/NetBSD/)
-
-Testing
--------
-
-On a running NetBSD system:
-
-    cd /usr/tests; atf-run | atf-report
-
-Troubleshooting
----------------
-
-- Send bugs and patches [via web form](https://www.NetBSD.org/cgi-bin/sendpr.cgi?gndb=netbsd).
-- Subscribe to the [mailing lists](https://www.NetBSD.org/mailinglists/).
-  The [netbsd-users](https://www.NetBSD.org/mailinglists/#netbsd-users) list is a good choice for many problems; watch [current-users](https://www.NetBSD.org/mailinglists/#current-users) if you follow the bleeding edge of NetBSD-current.
-- Join the community IRC channel [#netbsd @ libera.chat](https://web.libera.chat/#netbsd).
-
-Latest sources
---------------
-
-To fetch the main CVS repository:
-
-    cvs -d anoncvs@anoncvs.NetBSD.org:/cvsroot checkout -P src
-
-To work in the Git mirror, which is updated every few hours from CVS:
-
-    git clone https://github.com/NetBSD/src.git
-
-Additional Links
-----------------
-
-- [The NetBSD Guide](https://www.NetBSD.org/docs/guide/en/)
-- [NetBSD manual pages](https://man.NetBSD.org/)
-- [NetBSD Cross-Reference](https://nxr.NetBSD.org/)
+## Details
+- [NetBSD-README.md](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/NetBSD-README.md) now houses the original NetBSD README.md.
+- [points.norg](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/points.norg) is like a daily diary or a scratch pad. It keeps track of various implementaion
+  specific key points, doubts/questions, scratch code, and commits.
