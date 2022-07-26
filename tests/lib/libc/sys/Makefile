@@ -92,6 +92,7 @@ TESTS_C+=		t_wait
 TESTS_C+=		t_wait_noproc
 TESTS_C+=		t_wait_noproc_wnohang
 TESTS_C+=		t_write
+TESTS_C+=		t_splice
 
 SRCS.t_mprotect=	t_mprotect.c ${SRCS_EXEC_PROT} t_mprotect_helper.c
 

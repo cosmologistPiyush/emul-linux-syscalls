@@ -189,7 +189,8 @@ WEAKASM= accept.S __aio_suspend50.S clock_nanosleep.S close.S connect.S \
 	_sched_getaffinity.S sched_yield.S _sched_protect.S \
 	__select50.S sendmmsg.S sendmsg.S sendto.S \
 	setcontext.S __sigprocmask14.S __sigsuspend14.S sysarch.S \
-	__wait450.S wait6.S write.S writev.S
+	__wait450.S wait6.S write.S writev.S \
+	splice.S
 
 NOERR=	getegid.S geteuid.S getgid.S getpid.S getppid.S getuid.S \
 	issetugid.S posix_spawn.S sync.S __posix_fadvise50.S

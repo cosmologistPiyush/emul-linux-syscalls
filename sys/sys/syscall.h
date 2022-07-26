@@ -1,4 +1,4 @@
-/* $NetBSD: syscall.h,v 1.321 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call numbers.
@@ -1404,6 +1404,9 @@
 /* syscall: "lpathconf" ret: "long" args: "const char *" "int" */
 #define	SYS_lpathconf	499
 
-#define	SYS_MAXSYSCALL	500
+/* syscall: "splice" ret: "ssize_t" args: "int" "int" "size_t" "void *" "size_t *" */
+#define	SYS_splice	500
+
+#define	SYS_MAXSYSCALL	501
 #define	SYS_NSYSENT	512
 #endif /* _SYS_SYSCALL_H_ */

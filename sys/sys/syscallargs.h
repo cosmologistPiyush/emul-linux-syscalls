@@ -1,4 +1,4 @@
-/* $NetBSD: syscallargs.h,v 1.305 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call argument lists.
@@ -3356,6 +3356,15 @@ struct sys_lpathconf_args {
 };
 check_syscall_args(sys_lpathconf)
 
+struct sys_splice_args {
+	syscallarg(int) fd_in;
+	syscallarg(int) fd_out;
+	syscallarg(size_t) nbytes;
+	syscallarg(void *) excess_buffer;
+	syscallarg(size_t *) buffer_size;
+};
+check_syscall_args(sys_splice)
+
 /*
  * System call prototypes.
  */
@@ -4279,6 +4288,8 @@ int	sys___acl_aclcheck_file(struct lwp *, const struct sys___acl_aclcheck_file_a
 int	sys___acl_aclcheck_fd(struct lwp *, const struct sys___acl_aclcheck_fd_args *, register_t *);
 
 int	sys_lpathconf(struct lwp *, const struct sys_lpathconf_args *, register_t *);
+
+int	sys_splice(struct lwp *, const struct sys_splice_args *, register_t *);
 
 #endif /* !RUMP_CLIENT */
 #endif /* _SYS_SYSCALLARGS_H_ */
