@@ -2442,9 +2442,10 @@ struct sysent sysent[] = {
 		.sy_flags = SYCALL_ARG_PTR,
 		.sy_call = (sy_call_t *)sys_splicev
 	},		/* 500 = splicev */
-	{
-		.sy_call = sys_nosys,
-	},		/* 501 = filler */
+		ns(struct sys_splice_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys_splice
+	},		/* 501 = splice */
 	{
 		.sy_call = sys_nosys,
 	},		/* 502 = filler */

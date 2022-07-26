@@ -3897,6 +3897,16 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		uarg[4] = (intptr_t) SCARG(p, ops); /* struct spliceops * */
 		*n_args = 5;
 		break;
+	/* sys_splice */
+	case 501: {
+		const struct sys_splice_args *p = params;
+		iarg[0] = SCARG(p, fd_in); /* int */
+		iarg[1] = SCARG(p, fd_out); /* int */
+		uarg[2] = SCARG(p, nbytes); /* size_t */
+		uarg[3] = (intptr_t) SCARG(p, excess_buffer); /* void * */
+		uarg[4] = (intptr_t) SCARG(p, buffer_size); /* size_t * */
+		*n_args = 5;
+		break;
 	}
 	default:
 		*n_args = 0;
@@ -10503,7 +10513,11 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
+<<<<<<< HEAD
 	/* sys_splicev */
+=======
+	/* sys_splice */
+>>>>>>> intermediate
 	case 500:
 		switch(ndx) {
 		case 0:
@@ -10513,6 +10527,7 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			p = "int";
 			break;
 		case 2:
+<<<<<<< HEAD
 			p = "int";
 			break;
 		case 3:
@@ -10520,6 +10535,15 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		case 4:
 			p = "struct spliceops *";
+=======
+			p = "size_t";
+			break;
+		case 3:
+			p = "void *";
+			break;
+		case 4:
+			p = "size_t *";
+>>>>>>> intermediate
 			break;
 		default:
 			break;
@@ -12727,10 +12751,17 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		if (ndx == 0 || ndx == 1)
 			p = "long";
 		break;
+<<<<<<< HEAD
 	/* sys_splicev */
 	case 500:
 		if (ndx == 0 || ndx == 1)
 			p = "int";
+=======
+	/* sys_splice */
+	case 500:
+		if (ndx == 0 || ndx == 1)
+			p = "ssize_t";
+>>>>>>> intermediate
 		break;
 	default:
 		break;

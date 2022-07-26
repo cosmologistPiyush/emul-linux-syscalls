@@ -99,6 +99,7 @@ file	kern/kgdb_stub.c		kgdb
 file	kern/sched_4bsd.c		sched_4bsd
 file	kern/sched_m2.c			sched_m2
 file	kern/sys_splicev.c		kern
+file	kern/splice.c		kern
 file	kern/subr_acl_posix1e.c		kern
 file	kern/subr_acl_nfs4.c		kern
 file	kern/subr_asan.c		kasan

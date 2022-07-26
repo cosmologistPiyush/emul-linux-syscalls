@@ -1407,6 +1407,9 @@
 /* syscall: "splicev" ret: "int" args: "int" "int" "int" "size_t" "struct spliceops *" */
 #define	SYS_splicev	500
 
-#define	SYS_MAXSYSCALL	501
+/* syscall: "splice" ret: "ssize_t" args: "int" "int" "size_t" "void *" "size_t *" */
+#define	SYS_splice	501
+
+#define	SYS_MAXSYSCALL	502
 #define	SYS_NSYSENT	512
 #endif /* _SYS_SYSCALL_H_ */

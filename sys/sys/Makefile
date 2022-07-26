@@ -40,7 +40,7 @@ INCS=	acct.h acl.h agpio.h aio.h ansi.h aout_mids.h ataio.h atomic.h \
 	scanio.h sched.h scsiio.h sdt.h select.h selinfo.h sem.h semaphore.h \
 	sha1.h sha2.h sha3.h shm.h siginfo.h signal.h signalvar.h sigtypes.h \
 	sleepq.h socket.h \
-	socketvar.h sockio.h spawn.h specificdata.h stat.h \
+	socketvar.h sockio.h spawn.h specificdata.h splice.h stat.h \
 	statvfs.h syscall.h syscallargs.h sysctl.h stdarg.h stdbool.h \
 	stdint.h swap.h syncobj.h syslimits.h syslog.h \
 	tape.h termios.h time.h timeb.h timepps.h timerfd.h times.h timespec.h \

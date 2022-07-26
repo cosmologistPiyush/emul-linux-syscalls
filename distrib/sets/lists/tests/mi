@@ -3230,6 +3230,7 @@
 ./usr/tests/lib/libc/sys/t_sigtimedwait			tests-lib-tests		compattestfile,atf
 ./usr/tests/lib/libc/sys/t_sigtimedwait_pr_47625	tests-obsolete		obsolete
 ./usr/tests/lib/libc/sys/t_socketpair			tests-lib-tests		compattestfile,atf
+./usr/tests/lib/libc/sys/t_splice			tests-lib-tests		compattestfile,atf
 ./usr/tests/lib/libc/sys/t_stat				tests-lib-tests		compattestfile,atf
 ./usr/tests/lib/libc/sys/t_swapcontext			tests-lib-tests		compattestfile,atf
 ./usr/tests/lib/libc/sys/t_syscall			tests-lib-tests		compattestfile,atf

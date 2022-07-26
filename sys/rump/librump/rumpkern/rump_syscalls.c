@@ -6638,10 +6638,42 @@ rump___sysimpl_splicev(int fd_in, int off_in, int fd_out, size_t len, struct spl
 	}
 	return rv;
 }
+
+ssize_t rump___sysimpl_splice(int, int, size_t, void *, size_t *);
+ssize_t
+rump___sysimpl_splice(int fd_in, int fd_out, size_t nbytes, void * excess_buffer, size_t * buffer_size)
+{
+	register_t retval[2];
+	int error = 0;
+	ssize_t rv = -1;
+	struct sys_splice_args callarg;
+
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, fd_in) = fd_in;
+	SPARG(&callarg, fd_out) = fd_out;
+	SPARG(&callarg, nbytes) = nbytes;
+	SPARG(&callarg, excess_buffer) = excess_buffer;
+	SPARG(&callarg, buffer_size) = buffer_size;
+
+	error = rsys_syscall(SYS_splice, &callarg, sizeof(callarg), retval);
+	rsys_seterrno(error);
+	if (error == 0) {
+		if (sizeof(ssize_t) > sizeof(register_t))
+			rv = *(ssize_t *)retval;
+		else
+			rv = *retval;
+	}
+	return rv;
+}
 #ifdef RUMP_KERNEL_IS_LIBC
 __weak_alias(splicev,rump___sysimpl_splicev);
 __weak_alias(_splicev,rump___sysimpl_splicev);
 __strong_alias(_sys_splicev,rump___sysimpl_splicev);
+#endif /* RUMP_KERNEL_IS_LIBC */
+
+__weak_alias(splice,rump___sysimpl_splice);
+__weak_alias(_splice,rump___sysimpl_splice);
+__strong_alias(_sys_splice,rump___sysimpl_splice);
 #endif /* RUMP_KERNEL_IS_LIBC */
 
 int rump_sys_pipe(int *);
@@ -8606,10 +8638,9 @@ struct sysent rump_sysent[] = {
 		ns(struct sys_splicev_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 500 = splicev */
-	{
-		.sy_flags = SYCALL_NOSYS,
+		ns(struct sys_splice_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 501 = filler */
+	},		/* 501 = splice */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
