@@ -220,3 +220,4 @@
 485  sys___fstatvfs190      __fstatvfs190      rump___sysimpl_fstatvfs190
 486  sys___fhstatvfs190     __fhstatvfs190     rump___sysimpl_fhstatvfs190
 499  sys_lpathconf          lpathconf          rump___sysimpl_lpathconf
+500  sys_splice             splice             rump___sysimpl_splice

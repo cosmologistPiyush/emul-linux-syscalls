@@ -1,4 +1,4 @@
-/* $NetBSD: init_sysent.c,v 1.339 2021/11/01 05:26:27 thorpej Exp $ */
+/* $NetBSD$ */
 
 /*
  * System call switch table.
@@ -8,7 +8,7 @@
  */
 
 #include <sys/cdefs.h>
-__KERNEL_RCSID(0, "$NetBSD: init_sysent.c,v 1.339 2021/11/01 05:26:27 thorpej Exp $");
+__KERNEL_RCSID(0, "$NetBSD$");
 
 #ifdef _KERNEL_OPT
 #include "opt_modular.h"
@@ -2438,8 +2438,10 @@ struct sysent sysent[] = {
 		.sy_call = (sy_call_t *)sys_lpathconf
 	},		/* 499 = lpathconf */
 	{
-		.sy_call = sys_nosys,
-	},		/* 500 = filler */
+		ns(struct sys_splice_args),
+		.sy_flags = SYCALL_ARG_PTR,
+		.sy_call = (sy_call_t *)sys_splice
+	},		/* 500 = splice */
 	{
 		.sy_call = sys_nosys,
 	},		/* 501 = filler */

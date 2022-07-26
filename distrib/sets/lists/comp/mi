@@ -3435,6 +3435,7 @@
 ./usr/include/sys/soundcard.h			comp-c-include
 ./usr/include/sys/spawn.h			comp-c-include
 ./usr/include/sys/specificdata.h		comp-c-include
+./usr/include/sys/splice.h		comp-c-include
 ./usr/include/sys/stat.h			comp-c-include
 ./usr/include/sys/statvfs.h			comp-c-include
 ./usr/include/sys/stdarg.h			comp-c-include
