@@ -6612,9 +6612,9 @@ __weak_alias(_lpathconf,rump___sysimpl_lpathconf);
 __strong_alias(_sys_lpathconf,rump___sysimpl_lpathconf);
 #endif /* RUMP_KERNEL_IS_LIBC */
 
-int rump___sysimpl_splicev(int, int, int, size_t, struct spliceops *);
+int rump___sysimpl_splicev(int, off_t, int, size_t, struct spliceops *);
 int
-rump___sysimpl_splicev(int fd_in, int off_in, int fd_out, size_t len, struct spliceops * ops)
+rump___sysimpl_splicev(int fd_in, off_t offset, int fd_out, size_t len, struct spliceops * ops)
 {
 	register_t retval[2];
 	int error = 0;
@@ -6623,7 +6623,8 @@ rump___sysimpl_splicev(int fd_in, int off_in, int fd_out, size_t len, struct spl
 
 	memset(&callarg, 0, sizeof(callarg));
 	SPARG(&callarg, fd_in) = fd_in;
-	SPARG(&callarg, off_in) = off_in;
+	SPARG(&callarg, PAD) = 0;
+	SPARG(&callarg, offset) = offset;
 	SPARG(&callarg, fd_out) = fd_out;
 	SPARG(&callarg, len) = len;
 	SPARG(&callarg, ops) = ops;
@@ -6638,6 +6639,11 @@ rump___sysimpl_splicev(int fd_in, int off_in, int fd_out, size_t len, struct spl
 	}
 	return rv;
 }
+#ifdef RUMP_KERNEL_IS_LIBC
+__weak_alias(splicev,rump___sysimpl_splicev);
+__weak_alias(_splicev,rump___sysimpl_splicev);
+__strong_alias(_sys_splicev,rump___sysimpl_splicev);
+#endif /* RUMP_KERNEL_IS_LIBC */
 
 ssize_t rump___sysimpl_splice(int, int, size_t, void *, size_t *);
 ssize_t
@@ -6666,11 +6672,6 @@ rump___sysimpl_splice(int fd_in, int fd_out, size_t nbytes, void * excess_buffer
 	return rv;
 }
 #ifdef RUMP_KERNEL_IS_LIBC
-__weak_alias(splicev,rump___sysimpl_splicev);
-__weak_alias(_splicev,rump___sysimpl_splicev);
-__strong_alias(_sys_splicev,rump___sysimpl_splicev);
-#endif /* RUMP_KERNEL_IS_LIBC */
-
 __weak_alias(splice,rump___sysimpl_splice);
 __weak_alias(_splice,rump___sysimpl_splice);
 __strong_alias(_sys_splice,rump___sysimpl_splice);
@@ -8638,6 +8639,7 @@ struct sysent rump_sysent[] = {
 		ns(struct sys_splicev_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 500 = splicev */
+	{
 		ns(struct sys_splice_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 501 = splice */

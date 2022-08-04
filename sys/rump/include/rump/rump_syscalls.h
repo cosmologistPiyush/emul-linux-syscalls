@@ -772,12 +772,12 @@
 #define RUMP_SYS_RENAME_SOCKETPAIR rump___sysimpl_socketpair
 #endif
 
-#ifndef RUMP_SYS_RENAME_SPLICEV
-#define RUMP_SYS_RENAME_SPLICEV rump___sysimpl_splicev
-#endif
-
 #ifndef RUMP_SYS_RENAME_SPLICE
 #define RUMP_SYS_RENAME_SPLICE rump___sysimpl_splice
+#endif
+
+#ifndef RUMP_SYS_RENAME_SPLICEV
+#define RUMP_SYS_RENAME_SPLICEV rump___sysimpl_splicev
 #endif
 
 #ifndef RUMP_SYS_RENAME_STAT
@@ -1087,11 +1087,8 @@ int rump_sys_statvfs1(const char *, struct statvfs *, int) __RENAME(RUMP_SYS_REN
 int rump_sys_fstatvfs1(int, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FSTATVFS1);
 int rump_sys_fhstatvfs1(const void *, size_t, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FHSTATVFS1);
 long rump_sys_lpathconf(const char *, int) __RENAME(RUMP_SYS_RENAME_LPATHCONF);
-<<<<<<< HEAD
-int rump_sys_splicev(int, int, int, size_t, struct spliceops *) __RENAME(RUMP_SYS_RENAME_SPLICEV);
-=======
+int rump_sys_splicev(int, off_t, int, size_t, struct spliceops *) __RENAME(RUMP_SYS_RENAME_SPLICEV);
 ssize_t rump_sys_splice(int, int, size_t, void *, size_t *) __RENAME(RUMP_SYS_RENAME_SPLICE);
->>>>>>> intermediate
 int rump_sys_pipe(int *);
 
 #endif /* _RUMP_RUMP_SYSCALLS_H_ */

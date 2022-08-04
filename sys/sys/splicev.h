@@ -75,6 +75,8 @@ struct spliceops {
 #define sf_sbytes		sendfileargs->sbytes
 #define sf_flags		sendfileargs.flags
 
-/*TODO define flags */
+int splicev(int, off_t, int, size_t, struct spliceops*);
+
+/*TODO: define flags */
 
 #endif

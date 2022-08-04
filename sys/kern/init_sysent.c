@@ -2439,9 +2439,10 @@ struct sysent sysent[] = {
 	},		/* 499 = lpathconf */
 	{
 		ns(struct sys_splicev_args),
-		.sy_flags = SYCALL_ARG_PTR,
+		.sy_flags = SYCALL_NARGS64_VAL(1) | SYCALL_ARG_PTR | SYCALL_ARG2_64,
 		.sy_call = (sy_call_t *)sys_splicev
 	},		/* 500 = splicev */
+	{
 		ns(struct sys_splice_args),
 		.sy_flags = SYCALL_ARG_PTR,
 		.sy_call = (sy_call_t *)sys_splice

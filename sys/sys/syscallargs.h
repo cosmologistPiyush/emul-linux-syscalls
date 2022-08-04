@@ -3358,7 +3358,8 @@ check_syscall_args(sys_lpathconf)
 
 struct sys_splicev_args {
 	syscallarg(int) fd_in;
-	syscallarg(int) off_in;
+	syscallarg(int) PAD;
+	syscallarg(off_t) offset;
 	syscallarg(int) fd_out;
 	syscallarg(size_t) len;
 	syscallarg(struct spliceops *) ops;

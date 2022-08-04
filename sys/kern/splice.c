@@ -39,6 +39,7 @@
 #include <sys/kauth.h>
 #include <sys/kernel.h>
 #include <sys/kmem.h>
+#include <sys/ktrace.h>
 #include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/pax.h>
@@ -57,17 +58,112 @@
  * Splicev system call.
  */
 /* ARGUSED */
+
+int dosplice(int, int, size_t, void *, size_t*, register_t*);
+int do_spliceread(int, struct file*, void*, size_t, off_t*, int, size_t*);
+int do_splicewrite(int, struct file*, const void*, size_t, off_t*, int, size_t*);
+
 int
 sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 {
-	struct file *fp_in, *fp_out;
-	int error, fd_in, fd_out;
-	register_t *int_retval = NULL;
-	size_t bytes_rem_to_transfer, bytes_written, bytes_rem_to_write, *excess_buf_size, len;
-	void *excess_buf, *kernel_buffer;
+	return dosplice(SCARG(uap, fd_in), SCARG(uap, fd_out), SCARG(uap, nbytes),
+			SCARG(uap, excess_buffer), SCARG(uap, buffer_size), retval);
+}
 
-	fd_in = SCARG(uap, fd_in);
-	fd_out = SCARG(uap, fd_out);
+int
+do_spliceread(int fd, struct file *fp, void *buf, size_t nbyte,
+	off_t *offset, int flags, size_t *len)
+{
+	struct iovec aiov;
+	struct uio auio;
+	size_t cnt;
+	int error;
+
+	aiov.iov_base = (void *)buf;
+	aiov.iov_len = nbyte;
+	auio.uio_iov = &aiov;
+	auio.uio_iovcnt = 1;
+	auio.uio_resid = nbyte;
+	auio.uio_rw = UIO_READ;
+	auio.uio_vmspace = vmspace_kernel();
+
+	/*
+	 * Reads return ssize_t because -1 is returned on error.  Therefore
+	 * we must restrict the length to SSIZE_MAX to avoid garbage return
+	 * values.
+	 */
+	if (auio.uio_resid > SSIZE_MAX) {
+		error = EINVAL;
+		goto out;
+	}
+
+	cnt = auio.uio_resid;
+	error = (*fp->f_ops->fo_read)(fp, offset, &auio, fp->f_cred, flags);
+	if (error)
+		if (auio.uio_resid != cnt && (error == ERESTART ||
+		    error == EINTR || error == EWOULDBLOCK))
+			error = 0;
+	cnt -= auio.uio_resid;
+	ktrgenio(fd, UIO_READ, buf, cnt, error);
+	*len = cnt;
+ out:
+	return (error);
+}
+
+int
+do_splicewrite(int fd, struct file *fp, const void *buf,
+	size_t nbyte, off_t *offset, int flags, size_t *len)
+{
+	struct iovec aiov;
+	struct uio auio;
+	size_t cnt;
+	int error;
+
+	aiov.iov_base = __UNCONST(buf);		/* XXXUNCONST kills const */
+	aiov.iov_len = nbyte;
+	auio.uio_iov = &aiov;
+	auio.uio_iovcnt = 1;
+	auio.uio_resid = nbyte;
+	auio.uio_rw = UIO_WRITE;
+	auio.uio_vmspace = vmspace_kernel();
+
+	/*
+	 * Writes return ssize_t because -1 is returned on error.  Therefore
+	 * we must restrict the length to SSIZE_MAX to avoid garbage return
+	 * values.
+	 */
+	if (auio.uio_resid > SSIZE_MAX) {
+		error = EINVAL;
+		goto out;
+	}
+
+	cnt = auio.uio_resid;
+	error = (*fp->f_ops->fo_write)(fp, offset, &auio, fp->f_cred, flags);
+	if (error) {
+		if (auio.uio_resid != cnt && (error == ERESTART ||
+		    error == EINTR || error == EWOULDBLOCK))
+			error = 0;
+		if (error == EPIPE && !(fp->f_flag & FNOSIGPIPE)) {
+			mutex_enter(&proc_lock);
+			psignal(curproc, SIGPIPE);
+			mutex_exit(&proc_lock);
+		}
+	}
+	cnt -= auio.uio_resid;
+	ktrgenio(fd, UIO_WRITE, buf, cnt, error);
+	*len = cnt;
+ out:
+	return (error);
+}
+
+int
+dosplice(int fd_in, int fd_out, size_t len, void *excess_buffer,
+		size_t *buffer_size, register_t *retval)
+{
+	struct file *fp_in, *fp_out;
+	int error;
+	size_t bytes_rem_to_transfer, bytes_written, bytes_rem_to_write;
+	void *kernel_buffer;
 
 	error = EBADF;
 	if ((fp_in = fd_getfile(fd_in)) == NULL)
@@ -84,32 +180,25 @@ sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 
 	error = 0;
 
-	len = SCARG(uap, nbytes);
-	excess_buf= SCARG(uap, excess_buffer);
-	excess_buf_size = SCARG(uap, buffer_size);
-
 	kernel_buffer = kmem_alloc(KBUF_SIZE(len), KM_SLEEP);
 
-	excess_buf = kernel_buffer = NULL;
+	excess_buffer = kernel_buffer = NULL;
 
 	bytes_rem_to_transfer = len;
 
 	while (bytes_rem_to_transfer > 0) {
 		bytes_rem_to_write = bytes_written = 0;
-		error = dofileread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
-				&fp_in->f_offset, FOF_UPDATE_OFFSET, int_retval);
-		if (!error)
-			goto done;
-
-		bytes_rem_to_write = * (size_t *)int_retval;
-
-		error = dofilewrite(fd_out, fp_out, kernel_buffer, bytes_rem_to_write,
-				&fp_out->f_offset, FOF_UPDATE_OFFSET, int_retval);
+		error = do_spliceread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
+				&fp_in->f_offset, FOF_UPDATE_OFFSET, &bytes_rem_to_write);
 
 		if (!error)
 			goto done;
 
-		bytes_written = * (size_t *)int_retval;
+		error = do_splicewrite(fd_out, fp_out, kernel_buffer, bytes_rem_to_write,
+				&fp_out->f_offset, FOF_UPDATE_OFFSET, &bytes_written);
+		if (!error)
+			goto done;
+
 		bytes_rem_to_transfer -= bytes_written;
 
 		/* case of short write */
@@ -126,12 +215,12 @@ sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 			*retval = bytes_rem_to_transfer - bytes_rem_to_write;
 			
 			/* write the data already read in */
-			error = copyout((void *)((uintptr_t)kernel_buffer + bytes_written), excess_buf,
-					bytes_rem_to_write);
+			error = copyout((void *)((uintptr_t)kernel_buffer + bytes_written),
+					excess_buffer, bytes_rem_to_write);
 			if (!error)
 				goto done;
 			else {
-				error = copyout(&bytes_rem_to_write, excess_buf_size, sizeof(size_t));
+				error = copyout(&bytes_rem_to_write, buffer_size, sizeof(size_t));
 				goto done;
 			}
 		}	

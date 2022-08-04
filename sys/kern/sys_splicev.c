@@ -106,7 +106,7 @@ int sys_splicev(struct lwp *l, const struct sys_splicev_args *uap,
 
 	// iovcnt = 1;
 
-	off_in = SCARG(uap, off_in);
+	off_in = SCARG(uap, offset);
 	ops_p = SCARG(uap, ops);
 
 	if (ops_p != NULL) {

@@ -1404,7 +1404,7 @@
 /* syscall: "lpathconf" ret: "long" args: "const char *" "int" */
 #define	SYS_lpathconf	499
 
-/* syscall: "splicev" ret: "int" args: "int" "int" "int" "size_t" "struct spliceops *" */
+/* syscall: "splicev" ret: "int" args: "int" "int" "off_t" "int" "size_t" "struct spliceops *" */
 #define	SYS_splicev	500
 
 /* syscall: "splice" ret: "ssize_t" args: "int" "int" "size_t" "void *" "size_t *" */

@@ -3891,12 +3891,14 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 	case 500: {
 		const struct sys_splicev_args *p = params;
 		iarg[0] = SCARG(p, fd_in); /* int */
-		iarg[1] = SCARG(p, off_in); /* int */
-		iarg[2] = SCARG(p, fd_out); /* int */
-		uarg[3] = SCARG(p, len); /* size_t */
-		uarg[4] = (intptr_t) SCARG(p, ops); /* struct spliceops * */
-		*n_args = 5;
+		iarg[1] = SCARG(p, PAD); /* int */
+		iarg[2] = SCARG(p, offset); /* off_t */
+		iarg[3] = SCARG(p, fd_out); /* int */
+		uarg[4] = SCARG(p, len); /* size_t */
+		uarg[5] = (intptr_t) SCARG(p, ops); /* struct spliceops * */
+		*n_args = 6;
 		break;
+	}
 	/* sys_splice */
 	case 501: {
 		const struct sys_splice_args *p = params;
@@ -10513,11 +10515,7 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
-<<<<<<< HEAD
 	/* sys_splicev */
-=======
-	/* sys_splice */
->>>>>>> intermediate
 	case 500:
 		switch(ndx) {
 		case 0:
@@ -10527,15 +10525,31 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			p = "int";
 			break;
 		case 2:
-<<<<<<< HEAD
-			p = "int";
+			p = "off_t";
 			break;
 		case 3:
-			p = "size_t";
+			p = "int";
 			break;
 		case 4:
+			p = "size_t";
+			break;
+		case 5:
 			p = "struct spliceops *";
-=======
+			break;
+		default:
+			break;
+		};
+		break;
+	/* sys_splice */
+	case 501:
+		switch(ndx) {
+		case 0:
+			p = "int";
+			break;
+		case 1:
+			p = "int";
+			break;
+		case 2:
 			p = "size_t";
 			break;
 		case 3:
@@ -10543,7 +10557,6 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		case 4:
 			p = "size_t *";
->>>>>>> intermediate
 			break;
 		default:
 			break;
@@ -12751,17 +12764,15 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		if (ndx == 0 || ndx == 1)
 			p = "long";
 		break;
-<<<<<<< HEAD
 	/* sys_splicev */
 	case 500:
 		if (ndx == 0 || ndx == 1)
 			p = "int";
-=======
+		break;
 	/* sys_splice */
-	case 500:
+	case 501:
 		if (ndx == 0 || ndx == 1)
 			p = "ssize_t";
->>>>>>> intermediate
 		break;
 	default:
 		break;

@@ -62,13 +62,16 @@ ATF_TC_BODY(simple_splice_check, tc)
 
 	file_in_size = err;
 
+	err = fsync(in_fd);
+	ATF_REQUIRE(err == 0);
+
 	err = close(in_fd);
 	ATF_REQUIRE_MSG((err == 0), "%s\n", "file close failed");
 
 	in_fd = open("read", O_RDONLY, S_IRUSR);
 	ATF_REQUIRE_MSG(in_fd >= 0, "%s\n", "file to read from doesn't exist");
 
-	out_fd = open("write", O_CREAT|O_TRUNC|O_WRONLY|O_SYNC, S_IRUSR|S_IWUSR);
+	out_fd = open("write", O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR);
 	ATF_REQUIRE(out_fd >= 0);
 
 	err = splice(in_fd, out_fd, file_in_size, excess_buffer, &excess_size);
@@ -76,11 +79,20 @@ ATF_TC_BODY(simple_splice_check, tc)
 
 	bytes_unread = err;
 
+	err = fsync(out_fd);
+	ATF_REQUIRE_MSG(err == 0, "%s\n", "fsync failed");
+
 	err = fstat(out_fd, &sb);
 	ATF_REQUIRE(err == 0);
 
 	/* -1 for EOF */
-	file_out_size = (size_t)sb.st_size - 1;
+	printf("file out size: %lu\n", sb.st_size);
+	file_out_size = (size_t)sb.st_size;
+
+	printf("file_in_size: %lu\n", file_in_size);
+	printf("file_out_size: %lu\n", file_out_size);
+	printf("excess_size: %lu\n", excess_size);
+	printf("bytes_unread: %lu\n", bytes_unread);
 
 	ATF_REQUIRE_MSG((file_in_size - file_out_size) == (excess_size + bytes_unread),
 			"%s\n", "error in syscall implementation");
