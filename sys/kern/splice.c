@@ -163,7 +163,7 @@ dosplice(int fd_in, int fd_out, size_t len, void *excess_buffer,
 	struct file *fp_in, *fp_out;
 	int error;
 	size_t bytes_rem_to_transfer, bytes_written, bytes_rem_to_write;
-	void *kernel_buffer;
+	void *kernel_buffer = NULL;
 
 	error = EBADF;
 	if ((fp_in = fd_getfile(fd_in)) == NULL)
@@ -182,8 +182,6 @@ dosplice(int fd_in, int fd_out, size_t len, void *excess_buffer,
 
 	kernel_buffer = kmem_alloc(KBUF_SIZE(len), KM_SLEEP);
 
-	excess_buffer = kernel_buffer = NULL;
-
 	bytes_rem_to_transfer = len;
 
 	while (bytes_rem_to_transfer > 0) {
@@ -191,12 +189,12 @@ dosplice(int fd_in, int fd_out, size_t len, void *excess_buffer,
 		error = do_spliceread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
 				&fp_in->f_offset, FOF_UPDATE_OFFSET, &bytes_rem_to_write);
 
-		if (!error)
+		if (error)
 			goto done;
 
 		error = do_splicewrite(fd_out, fp_out, kernel_buffer, bytes_rem_to_write,
 				&fp_out->f_offset, FOF_UPDATE_OFFSET, &bytes_written);
-		if (!error)
+		if (error)
 			goto done;
 
 		bytes_rem_to_transfer -= bytes_written;
