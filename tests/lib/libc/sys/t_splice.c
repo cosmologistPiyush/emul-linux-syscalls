@@ -26,7 +26,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <atf-c/macros.h>
+#include <stdlib.h>
 #include <sys/cdefs.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/splice.h>
 
@@ -36,92 +39,181 @@
 #include <limits.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
 #include <unistd.h>
 #include <paths.h>
 
-ATF_TC(simple_splice_check);
-ATF_TC_HEAD(simple_splice_check, tc)
-{
-	atf_tc_set_md_var(tc, "descr", "Performing elementary splice(2) checks");
-}
-ATF_TC_BODY(simple_splice_check, tc)
-{
-	char *excess_buffer;
-	const char *file_contents = "The quick brown fox jumped over the wall";
-	int err, in_fd, out_fd, ret;
-	size_t bytes_unread, excess_size = 0, file_in_size, file_out_size;
-	struct stat sb;
+#include "h_macros.h"
 
+/* TODO: get avail space on pipefd[1] with fionspace. write as much avail then
+ * write extra, test the output
+ */
 
-	excess_buffer = NULL;
-	in_fd = open("read", O_CREAT|O_RDWR|O_TRUNC, S_IRUSR|S_IWUSR);
+static int in_fd, out_fd;
+
+static size_t
+preparation(size_t size)
+{
+	char *buf = NULL;
+	int error, fd;
+	fd = open("/dev/urandom", O_RDONLY, S_IRUSR);
+	ATF_REQUIRE_MSG(fd >= 0, "%s\n", "file to read has not been created");
+
+	in_fd = open("read", O_CREAT|O_TRUNC|O_RDWR, S_IRUSR|S_IWUSR);
 	ATF_REQUIRE_MSG(in_fd >= 0, "%s\n", "file to read has not been created");
 
-	err = write(in_fd, file_contents, strlen(file_contents));
-	ATF_REQUIRE_MSG((err > 0), "%s\n", "file to read from is empty");
+	buf = malloc(size+1);
+	ATF_REQUIRE(buf != NULL);
+	buf[size] = '\0';
 
-	file_in_size = err;
+	error = read(fd, buf, size-1);
+	ATF_REQUIRE_MSG((error > 0), "%s\n", "/dev/urandom not working");
 
-	err = fsync(in_fd);
-	ATF_REQUIRE(err == 0);
+	error = write(in_fd, buf, error);
+	ATF_REQUIRE_MSG((error > 0), "%s\n", "read file doesn't have data");
 
-	err = close(in_fd);
-	ATF_REQUIRE_MSG((err == 0), "%s\n", "file close failed");
+	ATF_REQUIRE(fsync(in_fd) == 0);
+	ATF_REQUIRE(close(in_fd) == 0);
 
 	in_fd = open("read", O_RDONLY, S_IRUSR);
-	ATF_REQUIRE_MSG(in_fd >= 0, "%s\n", "file to read from doesn't exist");
+	ATF_REQUIRE_MSG(fd > 0, "%s\n", "file to read from doesn't exist");
 
 	out_fd = open("write", O_CREAT|O_TRUNC|O_WRONLY, S_IRUSR|S_IWUSR);
-	ATF_REQUIRE(out_fd >= 0);
+	ATF_REQUIRE(fd > 0);
 
-	err = splice(in_fd, out_fd, file_in_size, excess_buffer, &excess_size);
+	/* return the number of bytes written */
+	return (size_t)error;
+}
+
+static void
+success_check(size_t file_in_size, size_t excess_size, size_t bytes_unread)
+{
+	struct stat fd_out;
+
+	ATF_REQUIRE_MSG(fsync(out_fd) == 0, "%s\n", "fsync failed");
+
+	ATF_REQUIRE(fstat(out_fd, &fd_out) == 0);
+
+	/* fd_out size doesn't contain EOF yet, as its still open */
+	ATF_REQUIRE_MSG((file_in_size - (size_t)fd_out.st_size) == (excess_size +
+				bytes_unread), "%s\n", "error in syscall implementation");
+}
+
+ATF_TC_WITH_CLEANUP(simple_splice_check);
+
+ATF_TC_HEAD(simple_splice_check, tc)
+{
+	atf_tc_set_md_var(tc, "descr", "transferring data from one regular file to another");
+}
+
+ATF_TC_BODY(simple_splice_check, tc)
+{
+	char *excess_buffer = NULL;
+	int err;
+	size_t bytes_to_transfer, bytes_unread, excess_size = 0; 
+
+	bytes_to_transfer = preparation(47);
+	ATF_REQUIRE(bytes_to_transfer > 0);
+
+	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
+
+	/* regular files */
+	err = splice(in_fd, out_fd, bytes_to_transfer, excess_buffer, &excess_size);
 	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err, strerror(err));
 
-	bytes_unread = err;
+	/* return the number of bytes unread */
+	bytes_unread = (size_t)err;
 
-	err = fsync(out_fd);
-	ATF_REQUIRE_MSG(err == 0, "%s\n", "fsync failed");
-
-	err = fstat(out_fd, &sb);
-	ATF_REQUIRE(err == 0);
-
-	/* -1 for EOF */
-	printf("file out size: %lu\n", sb.st_size);
-	file_out_size = (size_t)sb.st_size;
-
-	printf("file_in_size: %lu\n", file_in_size);
-	printf("file_out_size: %lu\n", file_out_size);
-	printf("excess_size: %lu\n", excess_size);
-	printf("bytes_unread: %lu\n", bytes_unread);
-
-	ATF_REQUIRE_MSG((file_in_size - file_out_size) == (excess_size + bytes_unread),
-			"%s\n", "error in syscall implementation");
-
-	while ((excess_size != 0) && ((ret = write (out_fd, excess_buffer, excess_size)) != 0)) {
-		if (ret == -1) {
+	success_check(bytes_to_transfer, excess_size, bytes_unread);
+	
+	while ((excess_size != 0) && ((err = write (out_fd, excess_buffer,
+									excess_size)) != 0)) {
+		if (err == -1) {
 			if (errno == EINTR)
 				continue;
 			perror("write");
 			break;
 		}
-		excess_size -= ret;
-		excess_buffer += ret;
+		excess_size -= err;
+		excess_buffer += err;
 	}
 
-	ATF_REQUIRE_MSG((file_in_size - file_out_size) == bytes_unread,
-			"%s\n", "error in syscall implementation");
+	free(excess_buffer);
+}
 
+ATF_TC_CLEANUP(simple_splice_check, tc)
+{
+	if(close(in_fd) != 0)
+		printf("close\n");
+	if(close(out_fd) != 0)
+		printf("close\n");
+	unlink("read");
+	unlink("write");
+}
 
-	err = close(in_fd);
-	ATF_CHECK(err == 0);
-	err = close(out_fd);
-	ATF_CHECK(err == 0);
+ATF_TC_WITH_CLEANUP(pipe_checks);
 
+ATF_TC_HEAD(pipe_checks, tc)
+{
+	atf_tc_set_md_var(tc, "descr", "write data from a regular file to a pipe and try to read it");
+}
+
+ATF_TC_BODY(pipe_checks, tc)
+{
+	char *excess_buffer = NULL, *retbuf = NULL;
+	int err, pipefd[2];
+	size_t bytes_to_transfer, bytes_unread, excess_size = 0;
+
+	ATF_REQUIRE(pipe(pipefd) == 0);
+
+	bytes_to_transfer = preparation(47);
+	ATF_REQUIRE(bytes_to_transfer > 0);
+
+	/* allocated with calloc() to initialise the characters with '\0' */
+	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
+	REQUIRE_LIBC(retbuf = calloc(bytes_to_transfer, sizeof(char)), NULL);
+
+	//extra_bytes_to_transfer -= pipe_buf_space; 
+
+	err = splice(in_fd, pipefd[1], bytes_to_transfer, excess_buffer, &excess_size);
+	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err, strerror(err));
+
+	/* return the number of bytes unread */
+	bytes_unread = (size_t)err;
+
+	ATF_CHECK(excess_size == 0);
+	if (excess_size > 0) {
+		strncpy(retbuf, excess_buffer, excess_size);
+		memset(excess_buffer, '\0', excess_size);
+	}
+
+	ATF_REQUIRE(close(pipefd[1]) == 0);
+
+	err = splice(pipefd[0], out_fd, bytes_to_transfer, excess_buffer, &excess_size);
+	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err, strerror(err));
+
+	success_check(bytes_to_transfer, (strlen(retbuf) + excess_size), bytes_unread);
+
+	ATF_REQUIRE(close(pipefd[0]) == 0);
+	free(excess_buffer);
+	free(retbuf);
+}
+
+ATF_TC_CLEANUP(pipe_checks, tc)
+{
+	if(close(in_fd) != 0)
+		printf("close\n");
+	if(close(out_fd) != 0)
+		printf("close\n");
+	unlink("read");
+	unlink("write");
 }
 
 ATF_TP_ADD_TCS(tp)
 {
 	ATF_TP_ADD_TC(tp, simple_splice_check);
+	ATF_TP_ADD_TC(tp, pipe_checks);
 
 	return atf_no_error();
 }

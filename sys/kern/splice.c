@@ -165,6 +165,9 @@ dosplice(int fd_in, int fd_out, size_t len, void *excess_buffer,
 	size_t bytes_rem_to_transfer, bytes_written, bytes_rem_to_write;
 	void *kernel_buffer = NULL;
 
+	if (!len) {
+		return 0;
+	}
 	error = EBADF;
 	if ((fp_in = fd_getfile(fd_in)) == NULL)
 		goto out;

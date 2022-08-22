@@ -167,10 +167,10 @@ int sys_splicev(struct lwp *l, const struct sys_splicev_args *uap,
 			}
 		}
 
-		/* Limit the size of read data to SSIZE_MAX */
-		// if (*bytes_to_read > SSIZE_MAX)
-		// 	*bytes_to_read = SSIZE_MAX;
-
+		/* Limit the size of read data to SSIZE_MAX
+		 * NOTE: Is there any point in limiting *bytes_to_read to SSIZE_MAX?
+		 */
+		
 		bytes_rem_to_read = * (size_t *)bytes_to_read;
 
 		/*

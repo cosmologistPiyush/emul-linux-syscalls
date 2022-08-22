@@ -28,6 +28,7 @@
 	  Ans- no mmap in Kernel
 	- `struct vfs` is `struct mount` in mount.h?
 	  Ans- Yes
+	- Where to call fo_seek() in custom do_splice[read | write]() or dosplice()
 @end
 
 *** Code:
