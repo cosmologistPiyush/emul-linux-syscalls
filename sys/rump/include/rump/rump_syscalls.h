@@ -1088,7 +1088,7 @@ int rump_sys_fstatvfs1(int, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FSTA
 int rump_sys_fhstatvfs1(const void *, size_t, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FHSTATVFS1);
 long rump_sys_lpathconf(const char *, int) __RENAME(RUMP_SYS_RENAME_LPATHCONF);
 int rump_sys_splicev(int, off_t, int, size_t, struct spliceops *) __RENAME(RUMP_SYS_RENAME_SPLICEV);
-ssize_t rump_sys_splice(int, int, size_t, void *, size_t *) __RENAME(RUMP_SYS_RENAME_SPLICE);
+ssize_t rump_sys_splice(int, off_t *, int, off_t *, size_t, void *, size_t *) __RENAME(RUMP_SYS_RENAME_SPLICE);
 int rump_sys_pipe(int *);
 
 #endif /* _RUMP_RUMP_SYSCALLS_H_ */

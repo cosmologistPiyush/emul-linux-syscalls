@@ -3368,7 +3368,9 @@ check_syscall_args(sys_splicev)
 
 struct sys_splice_args {
 	syscallarg(int) fd_in;
+	syscallarg(off_t *) off_in;
 	syscallarg(int) fd_out;
+	syscallarg(off_t *) off_out;
 	syscallarg(size_t) nbytes;
 	syscallarg(void *) excess_buffer;
 	syscallarg(size_t *) buffer_size;

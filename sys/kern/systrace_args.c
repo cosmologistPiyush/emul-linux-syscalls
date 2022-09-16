@@ -3903,11 +3903,13 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 	case 501: {
 		const struct sys_splice_args *p = params;
 		iarg[0] = SCARG(p, fd_in); /* int */
-		iarg[1] = SCARG(p, fd_out); /* int */
-		uarg[2] = SCARG(p, nbytes); /* size_t */
-		uarg[3] = (intptr_t) SCARG(p, excess_buffer); /* void * */
-		uarg[4] = (intptr_t) SCARG(p, buffer_size); /* size_t * */
-		*n_args = 5;
+		uarg[1] = (intptr_t) SCARG(p, off_in); /* off_t * */
+		iarg[2] = SCARG(p, fd_out); /* int */
+		uarg[3] = (intptr_t) SCARG(p, off_out); /* off_t * */
+		uarg[4] = SCARG(p, nbytes); /* size_t */
+		uarg[5] = (intptr_t) SCARG(p, excess_buffer); /* void * */
+		uarg[6] = (intptr_t) SCARG(p, buffer_size); /* size_t * */
+		*n_args = 7;
 		break;
 	}
 	default:
@@ -10547,15 +10549,21 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			p = "int";
 			break;
 		case 1:
-			p = "int";
+			p = "off_t *";
 			break;
 		case 2:
-			p = "size_t";
+			p = "int";
 			break;
 		case 3:
-			p = "void *";
+			p = "off_t *";
 			break;
 		case 4:
+			p = "size_t";
+			break;
+		case 5:
+			p = "void *";
+			break;
+		case 6:
 			p = "size_t *";
 			break;
 		default:
