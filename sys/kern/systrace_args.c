@@ -3907,9 +3907,8 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		iarg[2] = SCARG(p, fd_out); /* int */
 		uarg[3] = (intptr_t) SCARG(p, off_out); /* off_t * */
 		uarg[4] = SCARG(p, nbytes); /* size_t */
-		uarg[5] = (intptr_t) SCARG(p, excess_buffer); /* void * */
-		uarg[6] = (intptr_t) SCARG(p, buffer_size); /* size_t * */
-		*n_args = 7;
+		iarg[5] = SCARG(p, flags); /* int */
+		*n_args = 6;
 		break;
 	}
 	default:
@@ -10561,10 +10560,7 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			p = "size_t";
 			break;
 		case 5:
-			p = "void *";
-			break;
-		case 6:
-			p = "size_t *";
+			p = "int";
 			break;
 		default:
 			break;

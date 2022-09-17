@@ -6645,9 +6645,9 @@ __weak_alias(_splicev,rump___sysimpl_splicev);
 __strong_alias(_sys_splicev,rump___sysimpl_splicev);
 #endif /* RUMP_KERNEL_IS_LIBC */
 
-ssize_t rump___sysimpl_splice(int, off_t *, int, off_t *, size_t, void *, size_t *);
+ssize_t rump___sysimpl_splice(int, off_t *, int, off_t *, size_t, int);
 ssize_t
-rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, size_t nbytes, void * excess_buffer, size_t * buffer_size)
+rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, size_t nbytes, int flags)
 {
 	register_t retval[2];
 	int error = 0;
@@ -6660,8 +6660,7 @@ rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, si
 	SPARG(&callarg, fd_out) = fd_out;
 	SPARG(&callarg, off_out) = off_out;
 	SPARG(&callarg, nbytes) = nbytes;
-	SPARG(&callarg, excess_buffer) = excess_buffer;
-	SPARG(&callarg, buffer_size) = buffer_size;
+	SPARG(&callarg, flags) = flags;
 
 	error = rsys_syscall(SYS_splice, &callarg, sizeof(callarg), retval);
 	rsys_seterrno(error);

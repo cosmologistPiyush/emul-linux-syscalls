@@ -36,6 +36,6 @@
 
 #include <sys/types.h>
 
-ssize_t splice(int, off_t *, int, off_t *, size_t, void*, size_t*);
+ssize_t splice(int, off_t *, int, off_t *, size_t, int);
 
 #endif

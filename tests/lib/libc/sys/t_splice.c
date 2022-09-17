@@ -63,14 +63,11 @@ preparation(size_t size)
 {
 	char *buf = NULL;
 	int error, fd;
-	fd = open("/dev/urandom", O_RDONLY, S_IRUSR);
-	ATF_REQUIRE_MSG(fd > 0, "%s\n", "/dev/urandom issue");
+	RL(fd = open("/dev/urandom", O_RDONLY, S_IRUSR));
 
-	in_fd = open("read", O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR);
-	ATF_REQUIRE_MSG(in_fd > 0, "%s\n", "file to read has not been created");
+	RL(in_fd = open("read", O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR));
 
-	buf = malloc(size + 1);
-	ATF_REQUIRE(buf != NULL);
+	REQUIRE_LIBC(buf = malloc(size + 1), NULL);
 	buf[size] = '\0';
 
 	error = read(fd, buf, size - 1);
@@ -79,74 +76,40 @@ preparation(size_t size)
 	error = write(in_fd, buf, error);
 	ATF_REQUIRE_MSG((error > 0), "%s\n", "read file doesn't have data");
 
-	ATF_REQUIRE(fsync(in_fd) == 0);
-	ATF_REQUIRE(close(in_fd) == 0);
+	RL(fsync(in_fd));
+	RL(close(in_fd));
 
-	in_fd = open("read", O_RDONLY, S_IRUSR);
-	ATF_REQUIRE_MSG(in_fd > 0, "%s\n", "file to read from doesn't exist");
+	RL(in_fd = open("read", O_RDONLY, S_IRUSR));
 
-	out_fd = open("write", O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR);
-	ATF_REQUIRE(out_fd > 0);
+	RL(out_fd = open("write", O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
 
 	/* return the number of bytes written */
 	return (size_t)error;
 }
 
 static void
-success_check(size_t file_in_size, size_t excess_size, size_t bytes_unread)
+success_check(size_t file_in_size)
 {
 	struct stat fd_out;
 
 	ATF_REQUIRE_MSG(fsync(out_fd) == 0, "%s\n", "fsync failed");
 
-	ATF_REQUIRE(fstat(out_fd, &fd_out) == 0);
+	RL(fstat(out_fd, &fd_out));
 
 	ATF_CHECK(fd_out.st_size > 0);
 
 	/* fd_out size doesn't contain EOF */
-	ATF_REQUIRE_MSG((file_in_size - (size_t)fd_out.st_size) ==
-						(excess_size + bytes_unread),
-					"%s\n", "unsuccess: error in syscall implementation");
+	ATF_REQUIRE_MSG(file_in_size == (size_t)fd_out.st_size, "%s\n",
+					"splice unsuccessful");
 }
 
 static void
-write_out_excess(char *buf, size_t len, ...)
+cleanup(void)
 {
-	int err;
-	off_t *offset = NULL;
-	va_list ap;
-
-	va_start(ap, len);
-	offset = va_arg(ap, off_t *);
-
-	if (!offset) {
-		while ((len != 0) && ((err = write(out_fd, buf, len)) != 0)) {
-			if (err == -1) {
-				if (errno == EINTR)
-					continue;
-				perror("write");
-				break;
-			}
-			len -= err;
-			buf += err;
-		}
-	} else {
-		while ((len != 0) && ((err = pwrite(out_fd, buf, len, *offset)) != 0)) {
-			if (err == -1) {
-				if (errno == EINTR)
-					continue;
-				perror("write");
-				break;
-			}
-			len -= err;
-			buf += err;
-			*offset += err;
-		}
-	}
-
-	va_end(ap);
-
-	ATF_CHECK(len == 0);
+	close(in_fd);
+	close(out_fd);
+	unlink("read");
+	unlink("write");
 }
 
 ATF_TC_WITH_CLEANUP(regularfile_splice_check);
@@ -159,38 +122,21 @@ ATF_TC_HEAD(regularfile_splice_check, tc)
 
 ATF_TC_BODY(regularfile_splice_check, tc)
 {
-	char *excess_buffer = NULL;
 	int err;
-	size_t bytes_to_transfer, bytes_unread, excess_size = 0;
+	size_t bytes_to_transfer;
 
 	bytes_to_transfer = preparation(47);
 	ATF_REQUIRE(bytes_to_transfer > 0);
 
-	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
-
 	/* regular files */
-	err = splice(in_fd, NULL, out_fd, NULL, bytes_to_transfer, excess_buffer,
-				 &excess_size);
-	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err,
-				  strerror(errno));
+	RL(err = splice(in_fd, NULL, out_fd, NULL, bytes_to_transfer, 0));
 
-	/* return the number of bytes unread */
-	bytes_unread = (size_t)err;
-
-	success_check(bytes_to_transfer, excess_size, bytes_unread);
-	write_out_excess(excess_buffer, excess_size, NULL);
-	success_check(bytes_to_transfer, 0, bytes_unread);
-	free(excess_buffer);
+	success_check(bytes_to_transfer);
 }
 
 ATF_TC_CLEANUP(regularfile_splice_check, tc)
 {
-	if (close(in_fd) != 0)
-		printf("close\n");
-	if (close(out_fd) != 0)
-		printf("close\n");
-	unlink("read");
-	unlink("write");
+	cleanup();
 }
 
 ATF_TC_WITH_CLEANUP(regularfile_splice_check2);
@@ -203,92 +149,60 @@ ATF_TC_HEAD(regularfile_splice_check2, tc)
 
 ATF_TC_BODY(regularfile_splice_check2, tc)
 {
-	char *excess_buffer = NULL;
 	int err;
 	off_t off_in, off_out;
-	size_t bytes_to_transfer, bytes_unread, excess_size = 0;
+	size_t bytes_to_transfer;
 
 	bytes_to_transfer = preparation(47);
 	ATF_REQUIRE(bytes_to_transfer > 0);
 
-	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
-
 	off_in = off_out = 0;
-	err = splice(in_fd, &off_in, out_fd, &off_out, bytes_to_transfer / 2,
-				 excess_buffer, &excess_size);
-	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err,
-				  strerror(errno));
-
-	/* return the number of bytes unread */
-	bytes_unread = (size_t)err;
-
-	fprintf(stderr, "off_in: %li\noff_out: %li\n", off_in, off_out);
+	RL(err = splice(in_fd, &off_in, out_fd, &off_out, bytes_to_transfer/2, 0));
 
 	/* making sure file offsets haven't changed */
 	ATF_REQUIRE(lseek(in_fd, 0, SEEK_CUR) == 0);
 	ATF_REQUIRE(lseek(out_fd, 0, SEEK_CUR) == 0);
 
-	success_check(bytes_to_transfer / 2, excess_size, bytes_unread);
-	write_out_excess(excess_buffer, excess_size, &off_out);
-	success_check(bytes_to_transfer / 2, 0, bytes_unread);
+	success_check(bytes_to_transfer / 2);
 
 	ATF_CHECK(off_in == off_out);
 	ATF_REQUIRE(off_in == (off_t)bytes_to_transfer / 2);
 
-	err = splice(in_fd, &off_in, out_fd, &off_out, bytes_to_transfer / 2,
-				 excess_buffer, &excess_size);
-	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err,
-				  strerror(errno));
-
-	/* return the number of bytes unread */
-	bytes_unread = (size_t)err;
-
-	fprintf(stderr, "off_in: %li\noff_out: %li\n", off_in, off_out);
+	/* write the rest of the data */
+	RL(err = splice(in_fd, &off_in, out_fd, &off_out, bytes_to_transfer/2, 0));
 
 	/* making sure file offsets haven't changed */
 	ATF_REQUIRE(lseek(in_fd, 0, SEEK_CUR) == 0);
 	ATF_REQUIRE(lseek(out_fd, 0, SEEK_CUR) == 0);
 
-	success_check(bytes_to_transfer, excess_size, bytes_unread);
-	write_out_excess(excess_buffer, excess_size, &off_out);
-	success_check(bytes_to_transfer, 0, bytes_unread);
+	success_check(bytes_to_transfer);
 
 	ATF_CHECK(off_in == off_out);
 	ATF_REQUIRE(off_in == (off_t)bytes_to_transfer);
-
-	free(excess_buffer);
 }
 
 ATF_TC_CLEANUP(regularfile_splice_check2, tc)
 {
-	if (close(in_fd) != 0)
-		printf("close\n");
-	if (close(out_fd) != 0)
-		printf("close\n");
-	unlink("read");
-	unlink("write");
+	cleanup();
 }
 
 ATF_TC_WITH_CLEANUP(pipe_checks);
 
 ATF_TC_HEAD(pipe_checks, tc)
 {
-	atf_tc_set_md_var(
-		tc, "descr",
-		"write data from a regular file to a pipe and try to read it");
+	atf_tc_set_md_var(tc, "descr",
+				"write data from a regular file to a pipe and try to read it");
 }
 
 ATF_TC_BODY(pipe_checks, tc)
 {
-	char *excess_buffer = NULL;
 	int err, pipe_buf_space, pipefd[2];
-	size_t bytes_to_transfer, bytes_unread, excess_data = 0, excess_size = 0,
-			overflow = 20;
+	pid_t pid;
+	size_t bytes_to_transfer, overflow = 20;
 
-	ATF_REQUIRE(pipe(pipefd) == 0);
+	RL(pipe(pipefd));
 
-	err = ioctl(pipefd[1], FIONSPACE, &pipe_buf_space);
-	ATF_REQUIRE(err == 0);
+	RL(err = ioctl(pipefd[1], FIONSPACE, &pipe_buf_space));
 
 	bytes_to_transfer = preparation(pipe_buf_space + overflow);
 	ATF_REQUIRE(bytes_to_transfer > (size_t)pipe_buf_space);
@@ -296,48 +210,29 @@ ATF_TC_BODY(pipe_checks, tc)
 	overflow = bytes_to_transfer - (size_t)pipe_buf_space;
 	ATF_REQUIRE(overflow > 0);
 
-	/* allocated with calloc() to initialise the characters with '\0' */
-	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
+	RL(pid = fork());
+	if (!pid) {
+		RL(close(pipefd[0]));
 
-	err = splice(in_fd, NULL, pipefd[1], NULL, bytes_to_transfer, excess_buffer,
-				 &excess_size);
-	ATF_REQUIRE_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err,
-					strerror(errno));
+		RL(err = splice(in_fd, NULL, pipefd[1], NULL, bytes_to_transfer, 0));
 
-	/* return the number of bytes unread */
-	bytes_unread = (size_t)err;
-	ATF_CHECK(bytes_unread == 0);
-	ATF_REQUIRE(excess_size >= overflow);
+		RL(close(pipefd[1]));
+	} else {
 
-	excess_data = excess_size + bytes_unread;
-	memset(excess_buffer, '\0', excess_size);
-	excess_size = 0;
+		RL(close(pipefd[1]));
 
-	ATF_REQUIRE(close(pipefd[1]) == 0);
+		RL(err = splice(pipefd[0], NULL, out_fd, NULL, bytes_to_transfer, 0));
 
-	err = splice(pipefd[0], NULL, out_fd, NULL, bytes_to_transfer,
-				 excess_buffer, &excess_size);
-	ATF_CHECK_MSG(err >= 0, "%s\n%i:%s\n", "splice failed", err,
-				  strerror(errno));
+		wait(NULL);
+		success_check(bytes_to_transfer);
 
-	bytes_unread = (size_t)err;
-	ATF_REQUIRE(bytes_unread >= excess_data);
-	ATF_CHECK(excess_size == 0);
-	success_check((bytes_to_transfer - excess_data), excess_size,
-				  (bytes_unread - excess_data));
-
-	ATF_REQUIRE(close(pipefd[0]) == 0);
-	free(excess_buffer);
+		RL(close(pipefd[0]));
+	}
 }
 
 ATF_TC_CLEANUP(pipe_checks, tc)
 {
-	if (close(in_fd) != 0)
-		printf("close\n");
-	if (close(out_fd) != 0)
-		printf("close\n");
-	unlink("read");
-	unlink("write");
+	cleanup();
 }
 
 ATF_TC_WITH_CLEANUP(failing_checks);
@@ -349,83 +244,68 @@ ATF_TC_HEAD(failing_checks, tc)
 
 ATF_TC_BODY(failing_checks, tc)
 {
-	char *excess_buffer = NULL;
 	int fd_invalid, fd_permission, pipefd[2];
 	off_t offset;
-	size_t bytes_to_transfer, excess_size = 0;
+	size_t bytes_to_transfer;
 
 	bytes_to_transfer = preparation(54);
 	ATF_REQUIRE(bytes_to_transfer > 0);
 
-	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
-
 	/* for regular files */
 	errno = 0;
 	fd_invalid = -1;
-	fprintf(stderr, "about to call\n");
-	ATF_REQUIRE_ERRNO(EBADF,
-					  splice(fd_invalid, NULL, out_fd, NULL, bytes_to_transfer,
-							 excess_buffer, &excess_size) == -1);
+	ATF_REQUIRE_ERRNO(EBADF, splice(fd_invalid, NULL, out_fd, NULL,
+									bytes_to_transfer, 0));
 
-	ATF_REQUIRE_ERRNO(EBADF,
-					  splice(in_fd, NULL, fd_invalid, NULL, bytes_to_transfer,
-							 excess_buffer, &excess_size) == -1);
+	ATF_REQUIRE_ERRNO(EBADF, splice(in_fd, NULL, fd_invalid, NULL,
+									bytes_to_transfer, 0));
 
 	/* pipes */
-	ATF_REQUIRE(pipe(pipefd) == 0);
+	RL(pipe(pipefd));
 	offset = 10;
 
-	ATF_REQUIRE_ERRNO(ESPIPE,
-					  splice(in_fd, NULL, pipefd[1], &offset, bytes_to_transfer,
-							 excess_buffer, &excess_size) == -1);
+	ATF_REQUIRE_ERRNO(ESPIPE, splice(in_fd, NULL, pipefd[1], &offset,
+									 bytes_to_transfer, 0));
 
 	ATF_REQUIRE_ERRNO(ESPIPE, splice(pipefd[0], &offset, out_fd, NULL,
-									 bytes_to_transfer, excess_buffer,
-									 &excess_size) == -1);
+									 bytes_to_transfer, 0));
 
-	ATF_CHECK_ERRNO(EINVAL,
-					splice(pipefd[0], NULL, pipefd[0], NULL, bytes_to_transfer,
-						   excess_buffer, &excess_size) == -1);
+	ATF_CHECK_ERRNO(EBADF, splice(pipefd[0], NULL, pipefd[0], NULL,
+								   bytes_to_transfer, 0));
 
 	fd_permission = open("temp", O_CREAT);
 
-	ATF_CHECK_ERRNO(EBADF,
-					splice(fd_permission, NULL, out_fd, NULL, bytes_to_transfer,
-						   excess_buffer, &excess_size) == -1);
-	ATF_CHECK_ERRNO(EBADF,
-					splice(in_fd, NULL, fd_permission, NULL, bytes_to_transfer,
-						   excess_buffer, &excess_size) == -1);
+	// ATF_CHECK_ERRNO(EBADF, splice(fd_permission, NULL, out_fd, NULL,
+	// 							  bytes_to_transfer, 0));
+	ATF_CHECK_ERRNO(EBADF, splice(in_fd, NULL, fd_permission, NULL,
+								  bytes_to_transfer, 0));
 
-	ATF_CHECK(close(fd_permission) == 0);
-	ATF_CHECK(unlink("temp") == 0);
-	free(excess_buffer);
+	RL(close(fd_permission));
+	RL(unlink("temp"));
 }
 
 ATF_TC_CLEANUP(failing_checks, tc)
 {
-	if (close(in_fd) != 0)
-		printf("close\n");
-	if (close(out_fd) != 0)
-		printf("close\n");
-	unlink("read");
-	unlink("write");
+	cleanup();
 }
 
 static int
 recv_sock_prep(struct addrinfo *hints)
 {
-	int err, listener;  // yes = 1;
+	int err, listener;
 	struct addrinfo *res, *res_p;
 
 	/* AI_PASSIVE and hostname = NULL to set ai_add = INADDR_ANY */
 	hints->ai_flags = AI_PASSIVE;
 
-	err = getaddrinfo(NULL, PORT, hints, &res);
-	ATF_REQUIRE(err != -1);
+	if((err = getaddrinfo(NULL, PORT, hints, &res)) == -1) {
+		listener = -1;
+		goto out;
+	}
 
 	for (res_p = res; (res_p); res_p = res_p->ai_next) {
-		listener =
-			socket(res_p->ai_family, res_p->ai_socktype, res_p->ai_protocol);
+		listener = socket(res_p->ai_family, res_p->ai_socktype,
+						  res_p->ai_protocol);
 
 		if (listener < 0)
 			continue;
@@ -436,18 +316,22 @@ recv_sock_prep(struct addrinfo *hints)
 		if (bind(listener, res_p->ai_addr, res_p->ai_addrlen) == 0)
 			break;
 
-		close(listener);
+		RL(close(listener));
 	}
 
-	ATF_REQUIRE(res_p != NULL);
-
-	freeaddrinfo(res);
+	if(res_p == NULL) {
+		listener = -1;
+		goto done;
+	}
 
 	if (listen(listener, 10) == -1) {
-		close(listener);
-		return -1;
+		RL(close(listener));
+		listener = -1;
 	}
 
+done:
+	freeaddrinfo(res);
+out:
 	return listener;
 }
 
@@ -461,9 +345,9 @@ ATF_TC_HEAD(socket_checks, tc)
 ATF_TC_BODY(socket_checks, tc)
 {
 
-	char *excess_buffer = NULL;
-	int err, pipefd[2], lsockfd, sender, receiver;
-	size_t bytes_to_transfer, bytes_unread, excess_data = 0, excess_size = 0;
+	int err, lsockfd, sender, receiver;
+	pid_t pid;
+	size_t bytes_to_transfer;
 	struct addrinfo hints, *res = NULL, *res_p = NULL;
 	struct sockaddr_storage sender_addr;
 	socklen_t sender_len;
@@ -471,26 +355,17 @@ ATF_TC_BODY(socket_checks, tc)
 	bytes_to_transfer = preparation(57);
 	ATF_REQUIRE(bytes_to_transfer > 0);
 
-	REQUIRE_LIBC(excess_buffer = calloc(bytes_to_transfer, sizeof(char)), NULL);
-
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
 	/* No AI_PASSIVE and hostname = NULL to set ai_add = loopback address */
-	err = getaddrinfo(NULL, PORT, &hints, &res);
-	ATF_REQUIRE(err != -1);
+	RL(err = getaddrinfo(NULL, PORT, &hints, &res));
+	RL(lsockfd = recv_sock_prep(&hints));
 
-	lsockfd = recv_sock_prep(&hints);
-	ATF_REQUIRE(lsockfd != -1);
-
-	/* pipe used to send size of excess to parent for checking */
-	ATF_REQUIRE(pipe(pipefd) == 0);
-
-	if (!fork()) {
+	RL(pid = fork());
+	if (!pid) {
 		/* child process */
-
-		close(pipefd[0]);
 
 		/* listen() had already been called from the parent.
 		 * If the child runs and finishes the parent can take it forward
@@ -507,68 +382,48 @@ ATF_TC_BODY(socket_checks, tc)
 			close(sender);
 		}
 
-		ATF_REQUIRE(res_p != NULL);
+		if (res_p == NULL) {
+			freeaddrinfo(res);
+			atf_tc_fail("couldn't connect to the parent\n");
+		}
+
 
 		freeaddrinfo(res);
 
 		/* The child needs to be sender so parent can do verification */
 		/* this will never block */
 
-		err = splice(in_fd, NULL, sender, NULL, bytes_to_transfer,
-					 excess_buffer, &excess_size);
-		ATF_REQUIRE_MSG(err != -1, "%s\n%i:%s\n", "splice failed in child", err,
-						strerror(errno));
+		RL(err = splice(in_fd, NULL, sender, NULL, bytes_to_transfer, 0));
 
-		excess_data = excess_size + (size_t)err;
-		ATF_CHECK(write(pipefd[1], &excess_data, sizeof(size_t)) ==
-				  sizeof(size_t));
+		RL(close(sender));
+	} else {
 
-		close(pipefd[1]);
-		close(sender);
+		/* if the parent runs first, it will automatically block on accept(),
+		 * forcing the child to run
+		 */
+
+		receiver = accept(lsockfd, (struct sockaddr *)&sender_addr, &sender_len);
+		if (receiver == -1) {
+			close(lsockfd);
+			atf_tc_fail("couldn't accept the connection\n");
+		}
+
+		RL(err = splice(receiver, NULL, out_fd, NULL, bytes_to_transfer, 0));
+
+		/* make sure the child has sent that data */
+		waitpid(-1, NULL, 0);
+		RL(close(receiver));
 	}
-
-	/* if the parent runs first, it will automatically block on accept(),
-	 * forcing the child to run
-	 */
-
-	close(pipefd[1]);
-
-	receiver = accept(lsockfd, (struct sockaddr *)&sender_addr, &sender_len);
-	if (receiver == -1) {
-		close(lsockfd);
-		atf_tc_fail("couldn't accept the connection\n");
-	}
-
-	err = splice(receiver, NULL, out_fd, NULL, bytes_to_transfer, excess_buffer,
-				 &excess_size);
-	ATF_REQUIRE_MSG(err != -1, "%s\n%i:%s\n", "splice failed in parent", err,
-					strerror(errno));
-
-	bytes_unread = (size_t)err;
-
-	/* make sure the child has sent that data */
-	// waitpid(-1, NULL, 0);
-
-	ATF_CHECK(read(pipefd[0], &excess_data, sizeof(size_t)) == sizeof(size_t));
 
 	/* success_check() */
-	ATF_REQUIRE(bytes_unread >= excess_data);
-	success_check((bytes_to_transfer - excess_data), excess_size,
-				  bytes_unread - excess_data);
+	success_check(bytes_to_transfer);
 
-	close(pipefd[0]);
-	close(lsockfd);
-	close(receiver);
+	RL(close(lsockfd));
 }
 
 ATF_TC_CLEANUP(socket_checks, tc)
 {
-	if (close(in_fd) != 0)
-		printf("close\n");
-	if (close(out_fd) != 0)
-		printf("close\n");
-	unlink("read");
-	unlink("write");
+	cleanup();
 }
 
 ATF_TP_ADD_TCS(tp)

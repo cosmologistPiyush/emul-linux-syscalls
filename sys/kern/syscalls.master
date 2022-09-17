@@ -1052,5 +1052,4 @@
 500	STD	RUMP	{ int|sys||splicev(int fd_in, int PAD, off_t offset, \
 				int fd_out, size_t len, struct spliceops *ops); }
 501 STD	RUMP	{ ssize_t|sys||splice(int fd_in, off_t *off_in, int fd_out, \
-				off_t *off_out, size_t nbytes, void* excess_buffer, \
-				size_t *buffer_size); }
+				off_t *off_out, size_t nbytes, int flags); }

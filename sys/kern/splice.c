@@ -61,7 +61,7 @@
 /* ARGUSED */
 
 int dosplice(int, struct file *, off_t *, int, struct file *, off_t *, size_t,
-			 void *, size_t *, register_t *);
+			 register_t *);
 int do_spliceread(int, struct file *, void *, size_t, off_t *, int, size_t *);
 int do_splicewrite(int, struct file *, const void *, size_t, off_t *, int,
 				   size_t *);
@@ -70,7 +70,7 @@ int file_offsets(struct file *, off_t *, off_t **);
 int
 sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 {
-	int error, fd_in, fd_out;
+	int error, error_copy, fd_in, fd_out;
 	off_t *off_in, *off_out;
 	off_t *in_off, *out_off;
 	size_t nbytes;
@@ -93,15 +93,20 @@ sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 	if ((fp_in = fd_getfile(fd_in)) == NULL)
 		goto out;
 
-	if ((fp_in->f_flag & FREAD) == 0)
-		goto done;
+	if ((fp_in->f_flag & FREAD) == 0) {
+		fd_putfile(fd_in);
+		goto out;
+	}
 
-	if ((fp_out = fd_getfile(fd_out)) == NULL)
-		goto done;
+	if ((fp_out = fd_getfile(fd_out)) == NULL) {
+		fd_putfile(fd_in);
+		goto out;
+	}
 
 	if ((fp_out->f_flag & FWRITE) == 0)
 		goto done;
 
+	error = error_copy = 0;
 	in_off = out_off = NULL;
 
 	if (off_in) {
@@ -117,31 +122,29 @@ sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 	}
 
 	error = dosplice(fd_in, fp_in, in_off, fd_out, fp_out, out_off, nbytes,
-					SCARG(uap, excess_buffer), SCARG(uap, buffer_size), retval);
+					retval);
 	if (error)
-		goto done;
+		error_copy = error;
 
 	if (in_off) {
 		error = copyout(in_off, off_in, sizeof(*in_off));
-		if (error)
-			goto done;
+		kmem_free(in_off, sizeof(*in_off));
+		if (error_copy)
+			error = error_copy;
+		else
+			error_copy = error;
 	}
 
 	if (out_off) {
 		error = copyout(out_off, off_out, sizeof(*out_off));
-		if (error)
-			goto done;
+		kmem_free(out_off, sizeof(*out_off));
+		if (error_copy)
+			error = error_copy;
 	}
 
 done:
-	if (fp_in)
-		fd_putfile(fd_in);
-	if (fp_out)
-		fd_putfile(fd_out);
-	if (in_off)
-		kmem_free(in_off, sizeof(*in_off));
-	if (out_off)
-		kmem_free(out_off, sizeof(*out_off));
+	fd_putfile(fd_in);
+	fd_putfile(fd_out);
 
 out:
 	return error;
@@ -248,27 +251,29 @@ file_offsets(struct file *fp, off_t *user_offset, off_t **kernel_offset)
 		offset = kmem_alloc(sizeof(*offset), KM_SLEEP);
 		error = copyin(user_offset, offset, sizeof(*offset));
 		if (error)
-			goto out;
+			goto done;
 
 		error = (*fp->f_ops->fo_seek)(fp, *offset, SEEK_SET, offset, 0);
 		if (error)
-			goto out;
+			goto done;
 	}
 
 out:
 	*kernel_offset = offset;
 	return error;
+done:
+	kmem_free(offset, sizeof(*offset));
+	offset = NULL;
+	goto out;
 }
 
 int
 dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
-		 struct file *fp_out, off_t *off_out, size_t len, void *excess_buffer,
-		 size_t *buffer_size, register_t *retval)
+		 struct file *fp_out, off_t *off_out, size_t len, register_t *retval)
 {
 	int error, ioctl_ret;
 	off_t offset;
-	size_t bytes_written, bytes_to_write, write_size, bytes_transferred,
-		total_bytes_transferred;
+	size_t bytes_written, bytes_to_write, write_size, total_bytes_transferred;
 	void *kernel_buffer = NULL, *kbuf_p = NULL;
 
 	error = 0;
@@ -276,16 +281,16 @@ dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
 	if ((fp_in->f_type == DTYPE_PIPE) && (fp_out->f_type == DTYPE_PIPE))
 		if (fp_in->f_pipe == fp_out->f_pipe) {
 			error = EINVAL;
-			goto done;
+			goto out;
 		}
 
 	kernel_buffer = kmem_alloc(KBUF_SIZE(len), KM_SLEEP);
 
-	total_bytes_transferred = 0;
+	total_bytes_transferred = bytes_to_write = bytes_written = ioctl_ret = 0;
 
 	while (total_bytes_transferred < len) {
 		offset = off_in ? *off_in : fp_in->f_offset;
-		bytes_to_write = bytes_written = ioctl_ret = 0;
+
 		error = do_spliceread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
 							  &offset, FOF_UPDATE_OFFSET, &bytes_to_write);
 		if (error)
@@ -301,29 +306,20 @@ dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
 			fp_in->f_offset = offset;
 
 		while (bytes_to_write > 0) {
-			bytes_transferred = 0;
 			error = (*fp_out->f_ops->fo_ioctl)(fp_out, FIONSPACE, &ioctl_ret);
 			if (error)
 				goto done;
-			else {
-				if (ioctl_ret == 0) {
-					if (fp_out->f_type == DTYPE_VNODE)
-						write_size = bytes_to_write;
-					else
-						/*
-						 * can't go further, until there is space available on
-						 * the queue
-						 */
-						break;
-					/* write to the excess_buffer */
-				} else
-					write_size = MIN(ioctl_ret, bytes_to_write);
-			}
+
+			if (ioctl_ret == 0)
+				write_size = bytes_to_write;
+			else
+				write_size = MIN(ioctl_ret, bytes_to_write);
 
 write:
 			kbuf_p = (void *)((uintptr_t)kernel_buffer +
 								total_bytes_transferred);
 			offset = off_out ? *off_out : fp_out->f_offset;
+
 			error = do_splicewrite(fd_out, fp_out, kbuf_p, write_size, &offset,
 								   FOF_UPDATE_OFFSET, &bytes_written);
 			if (error)
@@ -334,48 +330,21 @@ write:
 			else
 				fp_out->f_offset = offset;
 
-			bytes_transferred += bytes_written;
+			bytes_to_write -= bytes_written;
 			total_bytes_transferred += bytes_written;
 
 			/* send queue only partially filled */
-			if (bytes_written != write_size) {
+			if ((bytes_written != write_size) && (ioctl_ret != 0)) {
 				write_size -= bytes_written;
 				goto write;
-			}
-			bytes_to_write -= bytes_transferred;
-		}
-
-		/* case of short write */
-		if (bytes_to_write > 0) {
-
-			/*
-			 * once we are in this, we are not going back up to the loop
-			 * we can set retval here itself
-			 */
-
-			/* write the data already read in */
-			error = copyout((void *)((uintptr_t)kernel_buffer +
-								total_bytes_transferred), excess_buffer,
-							bytes_to_write);
-			if (error)
-				goto done;
-			else {
-				error = copyout(&bytes_to_write, buffer_size, sizeof(size_t));
-				if (error)
-					goto done;
-				else
-					break;
 			}
 		}
 	}
 
-	/* return unread bytes */
-	*retval = len - total_bytes_transferred - bytes_to_write;
-	error = 0;
-
 done:
-	if (kernel_buffer)
-		kmem_free(kernel_buffer, KBUF_SIZE(len));
+	kmem_free(kernel_buffer, KBUF_SIZE(len));
+	*retval = total_bytes_transferred;
 
+out:
 	return error;
 }
