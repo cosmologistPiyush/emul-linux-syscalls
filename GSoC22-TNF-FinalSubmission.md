@@ -24,7 +24,7 @@ implementation plan for the project, and we decided in favor of a generic
 system call that will transfer data from the file descriptor, *fd_in*,
 to the out file descriptor, *fd_out*, inside the kernel space.  
 <p align="center">
-ssize_t splice(int fd_in, off_t \*off_in, int fd_out, off_t \*off_out,
+ssize_t splice(int fd_in, off_t *off_in, int fd_out, off_t *off_out,
 size_t len);  
 </p>
 The plan had been to make this generic implementation support both
@@ -51,8 +51,8 @@ implementation tested and running for the mid-term evaluation. For this, I wrote
 a simple version of the **splice()** system call itself, just with a
 user-provided excess buffer and no offsets:  
 <p align="center">
-ssize_t splice(int fd_in, int fd_out, size_ nbytes, void \*excess_buffer,
-size_t \*buffer_size);  
+ssize_t splice(int fd_in, int fd_out, size_ nbytes, void *excess_buffer,
+size_t *buffer_size);  
 </p>
 The *excess_buffer* and *buffer_size* were used in this version to notify when a
 short-write occurred. Though I wanted to test this version of the call for
