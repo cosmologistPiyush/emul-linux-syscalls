@@ -4,7 +4,7 @@ This project is a part of the **Google Summer of Code 2022**. More details about
 this project can be found at:
 - [GSoC22](https://summerofcode.withgoogle.com/programs/2022/projects/37Q8OZNU)
 - [NetBSD](https://wiki.netbsd.org/projects/project/linux_timer/)
-- [GSoC22-TNF-FinalSumission] ()
+- [GSoC22-TNF-FinalSumission](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/GSoC22-TNF-FinalSubmission.md)
 
 This repository is a clone of the [NetBSD GitHub src](https://github.com/NetBSD/src).
 

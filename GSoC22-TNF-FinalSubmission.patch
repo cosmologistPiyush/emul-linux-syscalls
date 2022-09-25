@@ -1,0 +1,2326 @@
+diff --git a/README.md b/README.md
+index 0d6c354aa4e9..9edf99b985aa 100644
+--- a/README.md
++++ b/README.md
+@@ -4,10 +4,10 @@ This project is a part of the **Google Summer of Code 2022**. More details about
+ this project can be found at:
+ - [GSoC22](https://summerofcode.withgoogle.com/programs/2022/projects/37Q8OZNU)
+ - [NetBSD](https://wiki.netbsd.org/projects/project/linux_timer/)
++- [GSoC22-TNF-FinalSumission](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/GSoC22-TNF-FinalSubmission.md)
+ 
+ This repository is a clone of the [NetBSD GitHub src](https://github.com/NetBSD/src).
+ 
+ ## Details
+ - [NetBSD-README.md](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/NetBSD-README.md) now houses the original NetBSD README.md.
+-- [points.norg](https://github.com/cosmologistPiyush/emul-linux-syscalls/blob/trunk/points.norg) is like a daily diary or a scratch pad. It keeps track of various implementaion
+-  specific key points, doubts/questions, scratch code, and commits.
++- All the work for submission can be found in the [trunk](https://github.com/cosmologistPiyush/emul-linux-syscalls/tree/trunk) branch of the project.
+diff --git a/distrib/amd64/liveimage/emuimage/Makefile b/distrib/amd64/liveimage/emuimage/Makefile
+index 61c98ba7c088..e6abfbf91f99 100644
+--- a/distrib/amd64/liveimage/emuimage/Makefile
++++ b/distrib/amd64/liveimage/emuimage/Makefile
+@@ -2,7 +2,7 @@
+ 
+ LIVEIMGBASE=	NetBSD-${DISTRIBVER}-amd64-live	# gives ${IMGBASE}.img
+ 
+-EMUIMAGEMB?=	2400            	# 2GB USB flash memories aren't 2GiB
++EMUIMAGEMB?=	1907
+ LIVEIMAGEMB=	${EMUIMAGEMB}
+ SWAPMB=		0			# No swap
+ IMAGEHOSTNAME=	netbsd
+diff --git a/distrib/sets/lists/comp/mi b/distrib/sets/lists/comp/mi
+index c4c19ecaf22f..e50b929ec22f 100644
+--- a/distrib/sets/lists/comp/mi
++++ b/distrib/sets/lists/comp/mi
+@@ -3213,6 +3213,7 @@
+ ./usr/include/smbfs				comp-obsolete		obsolete
+ ./usr/include/soundcard.h			comp-c-include
+ ./usr/include/spawn.h				comp-c-include
++./usr/include/splice.h				comp-c-include
+ ./usr/include/sqlite3.h				comp-c-include
+ ./usr/include/sqlite3ext.h			comp-c-include
+ ./usr/include/ssp/ssp.h				comp-c-include
+@@ -3435,6 +3436,7 @@
+ ./usr/include/sys/soundcard.h			comp-c-include
+ ./usr/include/sys/spawn.h			comp-c-include
+ ./usr/include/sys/specificdata.h		comp-c-include
++./usr/include/sys/splice.h		comp-c-include
+ ./usr/include/sys/stat.h			comp-c-include
+ ./usr/include/sys/statvfs.h			comp-c-include
+ ./usr/include/sys/stdarg.h			comp-c-include
+@@ -4914,6 +4916,7 @@
+ ./usr/share/man/cat2/sigwaitinfo.0		comp-c-catman		.cat
+ ./usr/share/man/cat2/socket.0			comp-c-catman		.cat
+ ./usr/share/man/cat2/socketpair.0		comp-c-catman		.cat
++./usr/share/man/cat2/splice.0		comp-c-catman		.cat
+ ./usr/share/man/cat2/stat.0			comp-c-catman		.cat
+ ./usr/share/man/cat2/statfs.0			comp-obsolete		obsolete
+ ./usr/share/man/cat2/statvfs.0			comp-c-catman		.cat
+@@ -10129,6 +10132,7 @@
+ ./usr/share/man/cat3/sem_trywait.0		comp-c-catman		.cat
+ ./usr/share/man/cat3/sem_unlink.0		comp-c-catman		.cat
+ ./usr/share/man/cat3/sem_wait.0			comp-c-catman		.cat
++./usr/share/man/cat3/sendfile.0			comp-c-catman		.cat
+ ./usr/share/man/cat3/set_com_err_hook.0		comp-krb5-catman	kerberos,.cat
+ ./usr/share/man/cat3/set_current_field.0	comp-c-catman		.cat
+ ./usr/share/man/cat3/set_current_item.0		comp-c-catman		.cat
+@@ -13272,6 +13276,7 @@
+ ./usr/share/man/html2/sigwaitinfo.html		comp-c-htmlman		html
+ ./usr/share/man/html2/socket.html		comp-c-htmlman		html
+ ./usr/share/man/html2/socketpair.html		comp-c-htmlman		html
++./usr/share/man/html2/splice.html		comp-c-htmlman		html
+ ./usr/share/man/html2/stat.html			comp-c-htmlman		html
+ ./usr/share/man/html2/statvfs.html		comp-c-htmlman		html
+ ./usr/share/man/html2/statvfs1.html		comp-c-htmlman		html
+@@ -18427,6 +18432,7 @@
+ ./usr/share/man/html3/sem_trywait.html		comp-c-htmlman		html
+ ./usr/share/man/html3/sem_unlink.html		comp-c-htmlman		html
+ ./usr/share/man/html3/sem_wait.html		comp-c-htmlman		html
++./usr/share/man/html3/sendfile.html			comp-c-htmlman		html
+ ./usr/share/man/html3/set_com_err_hook.html	comp-krb5-htmlman	kerberos,html
+ ./usr/share/man/html3/set_current_field.html	comp-c-htmlman		html
+ ./usr/share/man/html3/set_current_item.html	comp-c-htmlman		html
+@@ -21470,6 +21476,7 @@
+ ./usr/share/man/man2/sigwaitinfo.2		comp-c-man		.man
+ ./usr/share/man/man2/socket.2			comp-c-man		.man
+ ./usr/share/man/man2/socketpair.2		comp-c-man		.man
++./usr/share/man/man2/splice.2		comp-c-man		.man
+ ./usr/share/man/man2/stat.2			comp-c-man		.man
+ ./usr/share/man/man2/statfs.2			comp-obsolete		obsolete
+ ./usr/share/man/man2/statvfs.2			comp-c-man		.man
+@@ -26731,6 +26738,7 @@
+ ./usr/share/man/man3/sem_trywait.3		comp-c-man		.man
+ ./usr/share/man/man3/sem_unlink.3		comp-c-man		.man
+ ./usr/share/man/man3/sem_wait.3			comp-c-man		.man
++./usr/share/man/man3/sendfile.3			comp-c-man		.man
+ ./usr/share/man/man3/set_com_err_hook.3		comp-krb5-man		kerberos,.man
+ ./usr/share/man/man3/set_current_field.3	comp-c-man		.man
+ ./usr/share/man/man3/set_current_item.3		comp-c-man		.man
+diff --git a/distrib/sets/lists/debug/mi b/distrib/sets/lists/debug/mi
+index 5b4467b2d4cd..873b00fb2af2 100644
+--- a/distrib/sets/lists/debug/mi
++++ b/distrib/sets/lists/debug/mi
+@@ -2238,6 +2238,7 @@
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_sigtimedwait.debug		tests-lib-debug		debug,atf,compattestfile
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_sigtimedwait_pr_47625.debug	tests-obsolete		obsolete,compattestfile
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_socketpair.debug		tests-lib-debug		debug,atf,compattestfile
++./usr/libdata/debug/usr/tests/lib/libc/sys/t_splice.debug		tests-lib-debug		debug,atf,compattestfile
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_stat.debug			tests-lib-debug		debug,atf,compattestfile
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_swapcontext.debug		tests-lib-debug		debug,atf,compattestfile
+ ./usr/libdata/debug/usr/tests/lib/libc/sys/t_syscall.debug		tests-lib-debug		debug,atf,compattestfile
+diff --git a/distrib/sets/lists/tests/mi b/distrib/sets/lists/tests/mi
+index a8f2705bbea7..a668d798c9a8 100644
+--- a/distrib/sets/lists/tests/mi
++++ b/distrib/sets/lists/tests/mi
+@@ -3230,6 +3230,7 @@
+ ./usr/tests/lib/libc/sys/t_sigtimedwait			tests-lib-tests		compattestfile,atf
+ ./usr/tests/lib/libc/sys/t_sigtimedwait_pr_47625	tests-obsolete		obsolete
+ ./usr/tests/lib/libc/sys/t_socketpair			tests-lib-tests		compattestfile,atf
++./usr/tests/lib/libc/sys/t_splice			tests-lib-tests		compattestfile,atf
+ ./usr/tests/lib/libc/sys/t_stat				tests-lib-tests		compattestfile,atf
+ ./usr/tests/lib/libc/sys/t_swapcontext			tests-lib-tests		compattestfile,atf
+ ./usr/tests/lib/libc/sys/t_syscall			tests-lib-tests		compattestfile,atf
+diff --git a/external/gpl3/gdb/dist/gdb/remote.c b/external/gpl3/gdb/dist/gdb/remote.c
+index 59075cb09f20..389b6132d617 100644
+--- a/external/gpl3/gdb/dist/gdb/remote.c
++++ b/external/gpl3/gdb/dist/gdb/remote.c
+@@ -8126,13 +8126,6 @@ remote_target::process_g_packet (struct regcache *regcache)
+ 
+   buf_len = strlen (rs->buf.data ());
+ 
+-  /* Further sanity checks, with knowledge of the architecture.  */
+-  if (buf_len > 2 * rsa->sizeof_g_packet)
+-    error (_("Remote 'g' packet reply is too long (expected %ld bytes, got %d "
+-	     "bytes): %s"),
+-	   rsa->sizeof_g_packet, buf_len / 2,
+-	   rs->buf.data ());
+-
+   /* Save the size of the packet sent to us by the target.  It is used
+      as a heuristic when determining the max size of packets that the
+      target can safely receive.  */
+@@ -8143,7 +8136,7 @@ remote_target::process_g_packet (struct regcache *regcache)
+      update our records.  A 'g' reply that doesn't include a register's
+      value implies either that the register is not available, or that
+      the 'p' packet must be used.  */
+-  if (buf_len < 2 * rsa->sizeof_g_packet)
++  if (buf_len != 2 * rsa->sizeof_g_packet)
+     {
+       long sizeof_g_packet = buf_len / 2;
+ 
+diff --git a/include/Makefile b/include/Makefile
+index c2b7dc0e325b..e0c5d75ff61e 100644
+--- a/include/Makefile
++++ b/include/Makefile
+@@ -18,7 +18,8 @@ INCS=	a.out.h aio.h ar.h assert.h atomic.h \
+ 	ndbm.h netconfig.h netdb.h netgroup.h nlist.h nl_types.h nsswitch.h \
+ 	paths.h pwd.h quota.h randomid.h ranlib.h re_comp.h regex.h regexp.h \
+ 	resolv.h res_update.h rmt.h sched.h search.h semaphore.h setjmp.h \
+-	string.h sgtty.h signal.h spawn.h stab.h stdalign.h stddef.h stdio.h \
++	string.h sgtty.h signal.h spawn.h \
++	splice.h stab.h stdalign.h stddef.h stdio.h \
+ 	stdlib.h stdnoreturn.h strings.h stringlist.h struct.h sysexits.h \
+ 	tar.h time.h ttyent.h tzfile.h \
+ 	ucontext.h ulimit.h unistd.h util.h utime.h utmp.h utmpx.h uuid.h \
+diff --git a/include/splice.h b/include/splice.h
+new file mode 100644
+index 000000000000..df9d9b2f1941
+--- /dev/null
++++ b/include/splice.h
+@@ -0,0 +1,41 @@
++/*	$NetBSD$	*/
++
++/*-
++ * Copyright (c) 2022 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SPLICE_H_
++#define _SPLICE_H_
++
++#include <sys/types.h>
++
++__BEGIN_DECLS
++
++ssize_t splice(int, off_t *, int, off_t *, size_t);
++ssize_t sendfile(int, off_t *, int, size_t);
++
++__END_DECLS
++
++#endif
+diff --git a/lib/libc/gen/Makefile.inc b/lib/libc/gen/Makefile.inc
+index e6a6e7648f21..8397829fa2f9 100644
+--- a/lib/libc/gen/Makefile.inc
++++ b/lib/libc/gen/Makefile.inc
+@@ -26,7 +26,7 @@ SRCS+=	alarm.c alphasort.c arc4random.c assert.c asysctl.c \
+ 	nlist_elf64.c opendir.c pause.c popen.c posix_spawn_sched.c \
+ 	posix_spawn_fileactions.c posix_spawnp.c psignal.c pthread_atfork.c \
+ 	ptree.c pwcache.c pw_scan.c raise.c randomid.c rb.c readdir.c \
+-	rewinddir.c scandir.c seekdir.c setdomainname.c \
++	rewinddir.c scandir.c seekdir.c sendfile.c setdomainname.c \
+ 	sethostname.c setjmperr.c setmode.c setproctitle.c setprogname.c \
+ 	shquote.c shquotev.c sighold.c sigignore.c siginterrupt.c \
+ 	siglist.c signal.c signalname.c signalnext.c signalnumber.c \
+@@ -79,7 +79,7 @@ MAN+=	alarm.3 arc4random.3 basename.3 bsd_signal.3 bswap.3 \
+ 	posix_spawnattr_getschedpolicy.3 posix_spawnattr_init.3 \
+ 	posix_spawnattr_getsigdefault.3 posix_spawnattr_getsigmask.3 \
+ 	psignal.3 pwcache.3 pthread_atfork.3 \
+-	raise.3 randomid.3 realpath.3 scandir.3 setjmp.3 setmode.3 \
++	raise.3 randomid.3 realpath.3 scandir.3 sendfile.3 setjmp.3 setmode.3 \
+ 	setproctitle.3 shquote.3 sighold.3 sigignore.3 siginterrupt.3 \
+ 	signal.3 signalname.3 signbit.3 sigrelse.3 sigset.3 sigsetops.3 \
+ 	sleep.3 stringlist.3 sysconf.3 sysctl.3 syslog.3 \
+diff --git a/lib/libc/gen/sendfile.3 b/lib/libc/gen/sendfile.3
+new file mode 100644
+index 000000000000..190561505bda
+--- /dev/null
++++ b/lib/libc/gen/sendfile.3
+@@ -0,0 +1,138 @@
++.\"	$NetBSD$
++.\"
++.\" Copyright (c) 1980, 1991, 1993
++.\"	The Regents of the University of California.  All rights reserved.
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.\"
++.\"     @(#)read.2	8.4 (Berkeley) 2/26/94
++.\"
++.Dd September 21, 2022
++.Dt SENDFILE 3
++.Os
++.Sh NAME
++.Nm sendfile
++.Nd transfer data from a file to a socket inside the kernel space
++.Sh LIBRARY
++.Lb libc
++.Sh SYNOPSIS
++.In splice.h
++.Ft ssize_t
++.Fo sendfile
++.Fa "int fd"
++.Fa "off_t *offset"
++.Fa "int sockfd"
++.Fa "size_t nbytes"
++.Fc
++.Sh DESCRIPTION
++.Fn sendfile
++attempts to transfer
++.Fa nbytes
++of data from the object referenced by the descriptor
++.Fa fd
++to the socket descriptor, 
++.Fa sockfd ,
++without copying the data between the kernel and the user address space.
++.Pp
++The following semantics apply for the file descriptor and its offset:
++.Pp
++.Bl -hyphen -offset indent -compact
++.It
++If
++.Fa offset
++is NULL, then data is read starting from the file offset, and its
++value keeps getting modified.
++.It
++However, if the offset is non\-NULL, data is read starting from the location
++specified by the offset variale with future modifications to its value, and not
++the value of the file offset.
++.El
++.Pp
++The
++.Fn sendfile
++call is just a wrapper that eventually invokes the
++.Fn splice
++system call for doing the actual transfer of data.
++.\" More info about working of splice;
++.Sh RETURN VALUES
++If successful,
++.Fn sendfile
++returns the number of bytes moved from
++.Fa fd
++to
++.Fa sockfd .
++Otherwise, \-1 is returned and the global variable
++.Va errno
++is set to indicate the error.
++.Sh ERRORS
++.Fn sendfile
++will succeed unless:
++.Bl -tag -width Er
++.It Bq Er EAGAIN
++The individual file descriptor
++.Fa fd
++or
++.Fa sockfd
++was marked for non-blocking I/O, and no data was ready to be read or written.
++.It Bq Er EBADF
++Either
++.Fa fd
++is not a valid descriptor open for reading or
++.Fa sockfd
++doesn't correspond to a socket descriptor.
++.\" space for EFAULT if it is a possibility
++.It Bq Er EINTR
++A read or write from or to a slow device
++(i.e. one that might block for an arbitrary amount of time)
++was interrupted by the delivery of a signal
++before any data arrived.
++See
++.Xr sigaction 2
++for more information on the interaction between signals and system
++calls.
++.It Bq Er EINVAL
++Either file pointer associated with
++.Fa fd
++or
++.Fa sockfd
++was negative; or
++the total length of the I/O is more than can be expressed by the ssize_t
++return value.
++.It Bq Er EIO
++An I/O error occurred while reading from or writing to the file system.
++.It Bq Er EISDIR
++.Fa fd
++refers to a directory.
++.El
++.Sh SEE ALSO
++.Xr splice 2 ,
++.Xr read 2 ,
++.Xr write 2 ,
++.Xr open 2 ,
++.Xr pipe 2 ,
++.Xr poll 2 ,
++.Xr select 2 ,
++.Xr sigaction 2 ,
++.Xr socket 2
+diff --git a/lib/libc/gen/sendfile.c b/lib/libc/gen/sendfile.c
+new file mode 100644
+index 000000000000..00357f734da0
+--- /dev/null
++++ b/lib/libc/gen/sendfile.c
+@@ -0,0 +1,51 @@
++/*	$NetBSD$	*/
++
++/*-
++ * Copyright (c) 2022 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <sys/stat.h>
++#include <sys/syscall.h>
++#include <sys/types.h>
++
++#include <errno.h>
++#include <splice.h>
++
++ssize_t sendfile(int, off_t *, int, size_t);
++
++ssize_t
++sendfile(int fd_in, off_t *offset, int sockfd, size_t nbytes)
++{
++	struct stat sock_stat;
++
++	if (fstat(sockfd, &sock_stat) == 0) {
++		if (S_ISSOCK(sock_stat.st_mode))
++			return splice(fd_in, offset, sockfd, NULL, nbytes);
++		else
++			return (EBADF);
++	}
++
++	return 0;
++}
+diff --git a/lib/libc/sys/Makefile.inc b/lib/libc/sys/Makefile.inc
+index dd6fd5e09950..2b51c3b91f38 100644
+--- a/lib/libc/sys/Makefile.inc
++++ b/lib/libc/sys/Makefile.inc
+@@ -153,7 +153,7 @@ ASM=\
+ 		setuid.S __shmctl50.S shmdt.S shmget.S shutdown.S \
+ 		sigqueueinfo.S \
+ 		__sigaltstack14.S __sigpending14.S __sigaction_sigtramp.S \
+-		____sigtimedwait50.S __socket30.S socketpair.S __stat50.S \
++		____sigtimedwait50.S __socket30.S socketpair.S splice.S __stat50.S \
+ 		__statvfs190.S swapctl.S symlink.S symlinkat.S __sysctl.S \
+ 	timer_create.S timer_delete.S __timer_gettime50.S timer_getoverrun.S \
+ 		____semctl50.S __timer_settime50.S \
+@@ -290,7 +290,8 @@ MAN+=	accept.2 access.2 acct.2 adjtime.2 bind.2 brk.2 chdir.2 \
+ 	shutdown.2 sigaction.2 sigaltstack.2 sigpending.2 \
+ 	sigprocmask.2 sigqueue.2 sigstack.2 sigsuspend.2 sigtimedwait.2 \
+ 	socket.2 \
+-	socketpair.2 stat.2 statvfs.2 swapctl.2 swapon.3 symlink.2 \
++	socketpair.2 splice.2 \
++	stat.2 statvfs.2 swapctl.2 swapon.3 symlink.2 \
+ 	sync.2 sysarch.2 syscall.2 timer_create.2 timer_delete.2 \
+ 	timer_settime.2 timerfd.2 truncate.2 umask.2 undelete.2 \
+ 	unlink.2 utimes.2 utrace.2 uuidgen.2 vfork.2 wait.2 write.2
+diff --git a/lib/libc/sys/splice.2 b/lib/libc/sys/splice.2
+new file mode 100644
+index 000000000000..d2c36548b684
+--- /dev/null
++++ b/lib/libc/sys/splice.2
+@@ -0,0 +1,203 @@
++.\"	$NetBSD$
++.\"
++.\" Copyright (c) 1980, 1991, 1993
++.\"	The Regents of the University of California.  All rights reserved.
++.\"
++.\" Redistribution and use in source and binary forms, with or without
++.\" modification, are permitted provided that the following conditions
++.\" are met:
++.\" 1. Redistributions of source code must retain the above copyright
++.\"    notice, this list of conditions and the following disclaimer.
++.\" 2. Redistributions in binary form must reproduce the above copyright
++.\"    notice, this list of conditions and the following disclaimer in the
++.\"    documentation and/or other materials provided with the distribution.
++.\" 3. Neither the name of the University nor the names of its contributors
++.\"    may be used to endorse or promote products derived from this software
++.\"    without specific prior written permission.
++.\"
++.\" THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
++.\" ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
++.\" IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
++.\" ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
++.\" FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
++.\" DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
++.\" OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++.\" HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
++.\" LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
++.\" OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
++.\" SUCH DAMAGE.
++.\"
++.\"     @(#)read.2	8.4 (Berkeley) 2/26/94
++.\"
++.Dd September 21, 2022
++.Dt SPLICE 2
++.Os
++.Sh NAME
++.Nm splice
++.Nd transfer data between 2 descriptors inside the kernel space
++.Sh LIBRARY
++.Lb libc
++.Sh SYNOPSIS
++.In splice.h
++.Ft ssize_t
++.Fo splice
++.Fa "int fd_in"
++.Fa "off_t *off_in"
++.Fa "int fd_out"
++.Fa "off_t *off_out"
++.Fa "size_t nbytes"
++.Fc
++.Sh DESCRIPTION
++.Fn splice
++attempts to transfer
++.Fa nbytes
++of data from the object referenced by the descriptor
++.Fa fd_in
++to the object referenced by the descriptor
++.Fa fd_out
++without copying the data between the kernel and the user address
++space.
++.Pp
++The following semantics apply for each descriptor and its corresponding offset:
++.Pp
++.Bl -hyphen -offset indent -compact
++.It
++.Fa fd_in
++and
++.Fa fd_out
++can be either a regular file descriptor, a pipe descriptor, or a socket
++descriptor.
++.It
++If
++.Fa fd_in
++or
++.Fa fd_out
++refers to a pipe or a socket descriptor, then their corresponding offset
++.Fa off_in
++or
++.Fa off_out
++must be NULL.
++.It
++If
++.Fa fd_in
++or
++.Fa fd_out
++refers to a regular file and
++.Fa off_in
++or
++.Fa off_out
++respectively is NULL, then data is read starting from the file offset, and the
++value of file offset is modified.
++.It
++However, if the offset of the corresponding regular file descriptor is non-NULL,
++data is read starting from the location specified by the offset variale with
++future modifications to its value, and not the value of the file offset.
++.El
++.Pp
++.Fn splice
++is a general purpose call that moves data between two descriptors without
++copying between the kernel and the user address space. It may be used as the
++backing mechanism for implementing
++.Fn
++sendfile
++and the Linux specific
++.Fn
++splice
++in the compat_linux layer.
++.\" More info about working of splice;
++.Sh RETURN VALUES
++If successful,
++.Fn splice
++returns the number of bytes moved from
++.Fa fd_in
++to
++.Fa fd_out
++Otherwise, \-1 is returned and the global variable
++.Va errno
++is set to indicate the error.
++.Sh ERRORS
++.Fn splice
++will succeed unless:
++.Bl -tag -width Er
++.It Bq Er EAGAIN
++The individual file descriptor
++.Fa fd_in
++or
++.Fa fd_out
++was marked for non-blocking I/O, and no data was ready to be read or written.
++.It Bq Er EBADF
++Either
++.Fa fd_in
++or
++.Fa fd_out
++is not a valid descriptor open for reading or writing respectively.
++.\" space for EFAULT if it is a possibility
++.It Bq Er EINTR
++A read or write from or to a slow device
++(i.e. one that might block for an arbitrary amount of time)
++was interrupted by the delivery of a signal
++before any data arrived.
++See
++.Xr sigaction 2
++for more information on the interaction between signals and system
++calls.
++.It Bq Er EINVAL
++Either file pointer associated with
++.Fa fd_in
++or
++.Fa fd_out
++was negative; or
++the total length of the I/O is more than can be expressed by the size_t
++return value.
++.It Bq Er EIO
++An I/O error occurred while reading from or writing to the file system.
++.It Bq Er EISDIR
++.Fa fd_in
++refers to a directory.
++.It Bq Er EFBIG
++An attempt was made to write to
++.Fa fd_out
++that corresponds to a regular file which exceeds the process's file size limit
++or the maximum file size.
++.It Bq Er ENOSPC
++There is no free space remaining on the file system
++containing the out file referred to by
++.Fa fd_out .
++.It Bq Er EDQUOT
++The user's quota of disk blocks on the file system
++containing the out file referred to by
++.Fa fd_out ,
++has been exhausted.
++.El
++.Sh SEE ALSO
++.Xr read 2 ,
++.Xr write 2 ,
++.Xr open 2 ,
++.Xr pipe 2 ,
++.Xr poll 2 ,
++.Xr select 2 ,
++.Xr sigaction 2 ,
++.Xr socket 2
++.Sh STANDARDS
++The
++.Fn splice
++system call is not a part of any standard. It was originally a Linux-specific
++call, however, that implementation requires at least one of the two descriptors
++to be a pipe descriptor. The NetBSD implementation does not have any such
++requirement. Its a general purpose call which can be used to back more system
++calls of similar design \- where data needs to be moved between two file
++descriptors without making copies between the kernel and the user address space.
++.Sh CAVEATS
++.Fn
++splice
++works by reading as much data possible in a kernel allocated buffer and then
++tries to write it out. Naturally, the whole process is done inside loops in an
++attempt to move all of the
++.Fa nbytes
++of data. However, if in an unlikely scenario, a signal occurs during the write
++process, the system call returns with either a partial write or \-1, setting
++errno to EINTR. In such a case, as there already was un\-written data, read
++inside the kernel buffer, the file pointer or the
++.Fa off_in
++might not be in sync with the total bytes moved. For now this should be taken
++care of by the user.
+diff --git a/points.norg b/points.norg
+deleted file mode 100644
+index b3a9d1f53216..000000000000
+--- a/points.norg
++++ /dev/null
+@@ -1,73 +0,0 @@
+-@document.meta
+-	title: Things to Remember
+-	author: Piyush Sachdeva
+-	categories: work
+-@end
+-
+-*** Kernel routines
+-@code norg
+-	- All file operations in sys/filedesc.h.
+-	- struct file and related in sys/file.h.
+-	- see sys_pipe.c for info regarding pipe(2) implementation.
+-	- Linux is compat_43.
+-	- `struct vfs` is `struct mount` in mount.h?
+-@end
+-
+-* Implementation:
+-@code norg
+-	- [ ] Check for size of file and offset. If `offset > filesize` then ERROR
+-	- [ ] FOF_UPDATE_OFFSET flag from sys/file.h and sys_read() for splice.
+-	- [ ] Check the vnode flag variable for fd_in if it can be memory mapped (for splice).
+-	- [ ] nulify spliceops if statically allocated and not filled by the use in
+-	  the user-space itself.
+-@end
+-
+-*** Questions:
+-@code norg
+-	- Looked the code for \`/bin/cp`\. It used mmap(2) and write(2). Same for our implementation?
+-	  Ans- no mmap in Kernel
+-	- `struct vfs` is `struct mount` in mount.h?
+-	  Ans- Yes
+-@end
+-
+-*** Code:
+-@code c
+-	struct sf_hdtr {
+-		struct iovec *hd;
+-		size_t hdlen;
+-		struct iovec *tr;
+-		size_t trlen;
+-	};
+-
+-	struct sendfile_args {
+-		struct sf_hdtr *hdtr;
+-	};
+-
+-	struct splice_args {
+-		off_t off_out;
+-		unsigned int flags;
+-	};
+-
+-	enum action { SPLICE, SENDFILE };
+-
+-	struct spliceops {
+-		enum action choice;
+-
+-		union {
+-			struct splice_args *spargs;
+-			struct sendfile_args *sfargs;
+-		} op;
+-	};
+-
+-	ssize_t splicev(int fd_in, int off_in, int fd_out, size_t len,
+-					 struct spliceops ops[], size_t count) {
+-		/* flow of the function */
+-
+-		/*
+-		 * get a fp_in & fp_out (pointer to struct file) for fd_in & fd_out;
+-		 * make sure off_in is less than the size of the file and not 0;
+-		 *
+-		*/
+-	}
+-
+- @end
+diff --git a/sys/kern/files.kern b/sys/kern/files.kern
+index 03eb05ec2588..8169ac6316ff 100644
+--- a/sys/kern/files.kern
++++ b/sys/kern/files.kern
+@@ -175,6 +175,7 @@ file	kern/sys_select.c		kern
+ file	kern/sys_sig.c			kern
+ file	kern/sys_sched.c		kern
+ file	kern/sys_socket.c		kern
++file	kern/sys_splice.c		kern
+ file	kern/sys_timerfd.c		kern
+ file	kern/syscalls.c			syscall_debug | kdtrace_hooks
+ file	kern/sysv_ipc.c			sysvshm | sysvsem | sysvmsg
+diff --git a/sys/kern/init_sysent.c b/sys/kern/init_sysent.c
+index cd169e52b1c1..ab405ddfbc78 100644
+--- a/sys/kern/init_sysent.c
++++ b/sys/kern/init_sysent.c
+@@ -1,4 +1,4 @@
+-/* $NetBSD: init_sysent.c,v 1.339 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call switch table.
+@@ -8,7 +8,7 @@
+  */
+ 
+ #include <sys/cdefs.h>
+-__KERNEL_RCSID(0, "$NetBSD: init_sysent.c,v 1.339 2021/11/01 05:26:27 thorpej Exp $");
++__KERNEL_RCSID(0, "$NetBSD$");
+ 
+ #ifdef _KERNEL_OPT
+ #include "opt_modular.h"
+@@ -2438,8 +2438,10 @@ struct sysent sysent[] = {
+ 		.sy_call = (sy_call_t *)sys_lpathconf
+ 	},		/* 499 = lpathconf */
+ 	{
+-		.sy_call = sys_nosys,
+-	},		/* 500 = filler */
++		ns(struct sys_splice_args),
++		.sy_flags = SYCALL_ARG_PTR,
++		.sy_call = (sy_call_t *)sys_splice
++	},		/* 500 = splice */
+ 	{
+ 		.sy_call = sys_nosys,
+ 	},		/* 501 = filler */
+diff --git a/sys/kern/sys_splice.c b/sys/kern/sys_splice.c
+new file mode 100644
+index 000000000000..4ccb52799b65
+--- /dev/null
++++ b/sys/kern/sys_splice.c
+@@ -0,0 +1,354 @@
++/*	$NetBSD$	*/
++
++/*-
++ * Copyright (c) 2022 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <sys/cdefs.h>
++__COPYRIGHT("@(#) Copyright (c) 2022\
++ The NetBSD Foundation, inc. All rights reserved.");
++__RCSID("$NetBSD$");
++
++#include <sys/atomic.h>
++#include <sys/filedesc.h>
++#include <sys/filio.h>
++#include <sys/kauth.h>
++#include <sys/kernel.h>
++#include <sys/kmem.h>
++#include <sys/ktrace.h>
++#include <sys/lwp.h>
++#include <sys/mount.h>
++#include <sys/param.h>
++#include <sys/pax.h>
++#include <sys/proc.h>
++#include <sys/splice.h>
++#include <sys/stat.h>
++#include <sys/syscallargs.h>
++#include <sys/sysctl.h>
++#include <sys/systm.h>
++#include <sys/types.h>
++#include <sys/uio.h>
++#include <sys/vnode.h>
++
++#define KBUF_SIZE(bytes_to_transfer) (MIN(bytes_to_transfer, MAXPHYS))
++
++/*
++ * Splice system call.
++ */
++/* ARGUSED */
++
++int
++sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
++{
++	/* {
++		syscallarg(int)		fd_in;
++		syscallarg(off_t *)	off_in;
++		syscallarg(int)		fd_out;
++		syscallarg(off_t *)	off_out;
++		syscallarg(size_t)	nbytes;
++	} */
++
++	int error, ret, fd_in, fd_out;
++	off_t *off_in, *off_out;
++	off_t *in_off, *out_off;
++	size_t nbytes;
++	struct file *fp_in, *fp_out;
++
++	fp_in = fp_out = NULL;
++
++	fd_in = SCARG(uap, fd_in);
++	fd_out = SCARG(uap, fd_out);
++
++	off_in = SCARG(uap, off_in);
++	off_out = SCARG(uap, off_out);
++
++	nbytes = SCARG(uap, nbytes);
++
++	if (!nbytes)
++		return 0;
++
++	error = 0;
++	if ((fp_in = fd_getfile(fd_in)) == NULL)
++		return (EBADF);
++
++	if ((fp_in->f_flag & FREAD) == 0) {
++		fd_putfile(fd_in);
++		return (EBADF);
++	}
++
++	if ((fp_out = fd_getfile(fd_out)) == NULL) {
++		fd_putfile(fd_in);
++		return (EBADF);
++	}
++
++	if ((fp_out->f_flag & FWRITE) == 0) {
++		error = EBADF;
++		goto out;
++	}
++
++	ret = 0;
++	in_off = out_off = NULL;
++
++	/* seek to the file location if offset for fd_in is present and valid */
++	if (off_in) {
++		if ((error = file_offsets(fp_in, off_in, &in_off)))
++			goto out;
++	}
++
++	/* seek to the file location if offset for fd_out is present and valid */
++	if (off_out) {
++		if ((error = file_offsets(fp_out, off_out, &out_off)))
++			goto out;
++	}
++
++	ret = dosplice(fd_in, fp_in, in_off, fd_out, fp_out, out_off, nbytes,
++				   retval);
++
++	if (in_off) {
++		error = copyout(in_off, off_in, sizeof(*in_off));
++		kmem_free(in_off, sizeof(*in_off));
++		if (!ret && error)
++			ret = error;
++	}
++
++	if (out_off) {
++		error = copyout(out_off, off_out, sizeof(*out_off));
++		kmem_free(out_off, sizeof(*out_off));
++		if (!ret && error)
++			ret = error;
++	}
++
++	error = ret;
++
++out:
++	fd_putfile(fd_in);
++	fd_putfile(fd_out);
++
++	return error;
++}
++
++int
++do_spliceread(int fd, struct file *fp, void *buf, size_t nbyte, off_t *offset,
++			  int flags, size_t *len)
++{
++	struct iovec aiov;
++	struct uio auio;
++	size_t cnt;
++	int error;
++
++	aiov.iov_base = (void *)buf;
++	aiov.iov_len = nbyte;
++	auio.uio_iov = &aiov;
++	auio.uio_iovcnt = 1;
++	auio.uio_resid = nbyte;
++	auio.uio_rw = UIO_READ;
++	auio.uio_vmspace = vmspace_kernel();
++
++	/*
++	 * Reads return ssize_t because -1 is returned on error.  Therefore
++	 * we must restrict the length to SSIZE_MAX to avoid garbage return
++	 * values.
++	 */
++	if (auio.uio_resid > SSIZE_MAX) {
++		error = EINVAL;
++		goto out;
++	}
++
++	cnt = auio.uio_resid;
++	error = (*fp->f_ops->fo_read)(fp, offset, &auio, fp->f_cred, flags);
++	if (error)
++		if (auio.uio_resid != cnt &&
++			(error == ERESTART || error == EINTR || error == EWOULDBLOCK))
++			error = 0;
++	cnt -= auio.uio_resid;
++	ktrgenio(fd, UIO_READ, buf, cnt, error);
++	*len = cnt;
++out:
++	return (error);
++}
++
++int
++do_splicewrite(int fd, struct file *fp, const void *buf, size_t nbyte,
++			   off_t *offset, int flags, size_t *len)
++{
++	struct iovec aiov;
++	struct uio auio;
++	size_t cnt;
++	int error;
++
++	aiov.iov_base = __UNCONST(buf); /* XXXUNCONST kills const */
++	aiov.iov_len = nbyte;
++	auio.uio_iov = &aiov;
++	auio.uio_iovcnt = 1;
++	auio.uio_resid = nbyte;
++	auio.uio_rw = UIO_WRITE;
++	auio.uio_vmspace = vmspace_kernel();
++
++	/*
++	 * Writes return ssize_t because -1 is returned on error.  Therefore
++	 * we must restrict the length to SSIZE_MAX to avoid garbage return
++	 * values.
++	 */
++	if (auio.uio_resid > SSIZE_MAX) {
++		error = EINVAL;
++		goto out;
++	}
++
++	cnt = auio.uio_resid;
++	error = (*fp->f_ops->fo_write)(fp, offset, &auio, fp->f_cred, flags);
++	if (error) {
++		if (auio.uio_resid != cnt &&
++			(error == ERESTART || error == EINTR || error == EWOULDBLOCK))
++			error = 0;
++		if (error == EPIPE && !(fp->f_flag & FNOSIGPIPE)) {
++			mutex_enter(&proc_lock);
++			psignal(curproc, SIGPIPE);
++			mutex_exit(&proc_lock);
++		}
++	}
++	cnt -= auio.uio_resid;
++	ktrgenio(fd, UIO_WRITE, buf, cnt, error);
++	*len = cnt;
++out:
++	return (error);
++}
++
++int
++file_offsets(struct file *fp, off_t *user_offset, off_t **kernel_offset)
++{
++	int error = 0;
++
++	/* offset = NULL; done this way due to 'Werror=Unused-but-set-variable' */
++	off_t *offset = *kernel_offset;
++
++	if (fp->f_ops->fo_seek == NULL)
++		return (ESPIPE);
++	else {
++		offset = kmem_alloc(sizeof(*offset), KM_SLEEP);
++		error = copyin(user_offset, offset, sizeof(*offset));
++		if (error)
++			goto out;
++
++		error = (*fp->f_ops->fo_seek)(fp, *offset, SEEK_SET, offset, 0);
++		if (error)
++			goto out;
++	}
++
++	*kernel_offset = offset;
++	return 0;
++out:
++	kmem_free(offset, sizeof(*offset));
++	*kernel_offset = NULL;
++	return error;
++}
++
++int
++dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
++		 struct file *fp_out, off_t *off_out, size_t len, register_t *retval)
++{
++	int error, ioctl_ret;
++	off_t offset;
++	size_t bytes_written, bytes_to_write, bytes_transferred, write_size,
++		total_bytes_transferred;
++	void *kernel_buffer = NULL, *kbuf_p = NULL;
++
++	error = 0;
++
++	kernel_buffer = kmem_alloc(KBUF_SIZE(len), KM_SLEEP);
++
++	total_bytes_transferred = bytes_to_write = bytes_written = ioctl_ret = 0;
++
++	while (total_bytes_transferred < len) {
++		bytes_transferred = 0;
++		offset = off_in ? *off_in : fp_in->f_offset;
++
++		error = do_spliceread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
++							  &offset, FOF_UPDATE_OFFSET, &bytes_to_write);
++		if (error)
++			goto out;
++
++		/* no more data in the recv queue */
++		if (bytes_to_write == 0)
++			break;
++
++		if (off_in)
++			*off_in = offset;
++		else
++			fp_in->f_offset = offset;
++
++		while (bytes_to_write > 0) {
++			error = (*fp_out->f_ops->fo_ioctl)(fp_out, FIONSPACE, &ioctl_ret);
++			if (error)
++				goto out;
++
++			if (ioctl_ret == 0)
++				/*
++				 * Two possible cases here:-
++				 * - Either the fd corresponds to a regular file, in which case
++				 *   ioctl_ret = 0, and there is no write queue.
++				 * - Second, no space is available on the send queue, so we
++				 *   attempt a write of the max possible size i.e. (the number
++				 *   of bytes read) which will block, eventually succeeding
++				 *   either partially or completely.
++				 */
++				write_size = bytes_to_write;
++			else
++				write_size = MIN(ioctl_ret, bytes_to_write);
++
++		write:
++			kbuf_p = (void *)((uintptr_t)kernel_buffer + bytes_transferred);
++			offset = off_out ? *off_out : fp_out->f_offset;
++
++			error = do_splicewrite(fd_out, fp_out, kbuf_p, write_size, &offset,
++								   FOF_UPDATE_OFFSET, &bytes_written);
++			if (error)
++				goto out;
++
++			if (off_out)
++				*off_out = offset;
++			else
++				fp_out->f_offset = offset;
++
++			bytes_to_write -= bytes_written;
++			bytes_transferred += bytes_written;
++
++			/* send queue only partially filled */
++			if ((bytes_written != write_size) && (ioctl_ret != 0)) {
++				write_size -= bytes_written;
++				goto write;
++			}
++		}
++		total_bytes_transferred += bytes_transferred;
++	}
++
++out:
++	kmem_free(kernel_buffer, KBUF_SIZE(len));
++	if (error)
++		if (total_bytes_transferred > 0 &&
++			(error == ERESTART || error == EINTR || error == EWOULDBLOCK))
++			error = 0;
++	*retval = total_bytes_transferred;
++	return error;
++}
+diff --git a/sys/kern/syscalls.c b/sys/kern/syscalls.c
+index a2643abb6516..4c48a52d38ad 100644
+--- a/sys/kern/syscalls.c
++++ b/sys/kern/syscalls.c
+@@ -1,4 +1,4 @@
+-/* $NetBSD: syscalls.c,v 1.327 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call names.
+@@ -8,7 +8,7 @@
+  */
+ 
+ #include <sys/cdefs.h>
+-__KERNEL_RCSID(0, "$NetBSD: syscalls.c,v 1.327 2021/11/01 05:26:27 thorpej Exp $");
++__KERNEL_RCSID(0, "$NetBSD$");
+ 
+ #if defined(_KERNEL_OPT)
+ #ifdef _KERNEL_OPT
+@@ -550,7 +550,7 @@ const char *const syscallnames[] = {
+ 	/* 497 */	"__acl_aclcheck_file",
+ 	/* 498 */	"__acl_aclcheck_fd",
+ 	/* 499 */	"lpathconf",
+-	/* 500 */	"# filler",
++	/* 500 */	"splice",
+ 	/* 501 */	"# filler",
+ 	/* 502 */	"# filler",
+ 	/* 503 */	"# filler",
+@@ -1087,7 +1087,7 @@ const char *const altsyscallnames[] = {
+ 	/* 497 */	NULL, /* __acl_aclcheck_file */
+ 	/* 498 */	NULL, /* __acl_aclcheck_fd */
+ 	/* 499 */	NULL, /* lpathconf */
+-	/* 500 */	NULL, /* filler */
++	/* 500 */	NULL, /* splice */
+ 	/* 501 */	NULL, /* filler */
+ 	/* 502 */	NULL, /* filler */
+ 	/* 503 */	NULL, /* filler */
+diff --git a/sys/kern/syscalls.master b/sys/kern/syscalls.master
+index ed4dc2bd1873..fa27a2ce91b4 100644
+--- a/sys/kern/syscalls.master
++++ b/sys/kern/syscalls.master
+@@ -1049,3 +1049,5 @@
+ 498	STD		{ int|sys||__acl_aclcheck_fd(int filedes, \
+ 			    acl_type_t type, struct acl *aclp); }
+ 499	STD	RUMP	{ long|sys||lpathconf(const char *path, int name); }
++500 STD	RUMP	{ ssize_t|sys||splice(int fd_in, off_t *off_in, int fd_out, \
++				off_t *off_out, size_t nbytes); }
+diff --git a/sys/kern/syscalls_autoload.c b/sys/kern/syscalls_autoload.c
+index 7403f886091f..bfadebadf31c 100644
+--- a/sys/kern/syscalls_autoload.c
++++ b/sys/kern/syscalls_autoload.c
+@@ -1,4 +1,4 @@
+-/* $NetBSD: syscalls_autoload.c,v 1.43 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call autoload table.
+@@ -8,7 +8,7 @@
+  */
+ 
+ #include <sys/cdefs.h>
+-__KERNEL_RCSID(0, "$NetBSD: syscalls_autoload.c,v 1.43 2021/11/01 05:26:27 thorpej Exp $");
++__KERNEL_RCSID(0, "$NetBSD$");
+ 
+ #ifdef _KERNEL_OPT
+ #include "opt_modular.h"
+diff --git a/sys/kern/systrace_args.c b/sys/kern/systrace_args.c
+index b2d9b2203bcb..65c6f744d9e9 100644
+--- a/sys/kern/systrace_args.c
++++ b/sys/kern/systrace_args.c
+@@ -1,4 +1,4 @@
+-/* $NetBSD: systrace_args.c,v 1.49 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call argument to DTrace register array conversion.
+@@ -3887,6 +3887,17 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
+ 		*n_args = 2;
+ 		break;
+ 	}
++	/* sys_splice */
++	case 500: {
++		const struct sys_splice_args *p = params;
++		iarg[0] = SCARG(p, fd_in); /* int */
++		uarg[1] = (intptr_t) SCARG(p, off_in); /* off_t * */
++		iarg[2] = SCARG(p, fd_out); /* int */
++		uarg[3] = (intptr_t) SCARG(p, off_out); /* off_t * */
++		uarg[4] = SCARG(p, nbytes); /* size_t */
++		*n_args = 5;
++		break;
++	}
+ 	default:
+ 		*n_args = 0;
+ 		break;
+@@ -10492,6 +10503,28 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
+ 			break;
+ 		};
+ 		break;
++	/* sys_splice */
++	case 500:
++		switch(ndx) {
++		case 0:
++			p = "int";
++			break;
++		case 1:
++			p = "off_t *";
++			break;
++		case 2:
++			p = "int";
++			break;
++		case 3:
++			p = "off_t *";
++			break;
++		case 4:
++			p = "size_t";
++			break;
++		default:
++			break;
++		};
++		break;
+ 	default:
+ 		break;
+ 	};
+@@ -12694,6 +12727,11 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
+ 		if (ndx == 0 || ndx == 1)
+ 			p = "long";
+ 		break;
++	/* sys_splice */
++	case 500:
++		if (ndx == 0 || ndx == 1)
++			p = "ssize_t";
++		break;
+ 	default:
+ 		break;
+ 	};
+diff --git a/sys/rump/include/rump/rump_syscalls.h b/sys/rump/include/rump/rump_syscalls.h
+index da184e96f464..1883249a0f9f 100644
+--- a/sys/rump/include/rump/rump_syscalls.h
++++ b/sys/rump/include/rump/rump_syscalls.h
+@@ -1,4 +1,4 @@
+-/* $NetBSD: rump_syscalls.h,v 1.126 2021/11/01 05:26:28 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call protos in rump namespace.
+@@ -772,6 +772,10 @@
+ #define RUMP_SYS_RENAME_SOCKETPAIR rump___sysimpl_socketpair
+ #endif
+ 
++#ifndef RUMP_SYS_RENAME_SPLICE
++#define RUMP_SYS_RENAME_SPLICE rump___sysimpl_splice
++#endif
++
+ #ifndef RUMP_SYS_RENAME_STAT
+ #define RUMP_SYS_RENAME_STAT rump___sysimpl_stat50
+ #endif
+@@ -1078,6 +1082,7 @@ int rump_sys_statvfs1(const char *, struct statvfs *, int) __RENAME(RUMP_SYS_REN
+ int rump_sys_fstatvfs1(int, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FSTATVFS1);
+ int rump_sys_fhstatvfs1(const void *, size_t, struct statvfs *, int) __RENAME(RUMP_SYS_RENAME_FHSTATVFS1);
+ long rump_sys_lpathconf(const char *, int) __RENAME(RUMP_SYS_RENAME_LPATHCONF);
++ssize_t rump_sys_splice(int, off_t *, int, off_t *, size_t) __RENAME(RUMP_SYS_RENAME_SPLICE);
+ int rump_sys_pipe(int *);
+ 
+ #endif /* _RUMP_RUMP_SYSCALLS_H_ */
+diff --git a/sys/rump/librump/rumpkern/rump_syscalls.c b/sys/rump/librump/rumpkern/rump_syscalls.c
+index 2eaba2587e7f..c4dd80b3c925 100644
+--- a/sys/rump/librump/rumpkern/rump_syscalls.c
++++ b/sys/rump/librump/rumpkern/rump_syscalls.c
+@@ -1,4 +1,4 @@
+-/* $NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call vector and marshalling for rump.
+@@ -15,7 +15,7 @@
+ 
+ #ifdef __NetBSD__
+ #include <sys/cdefs.h>
+-__KERNEL_RCSID(0, "$NetBSD: rump_syscalls.c,v 1.157 2021/11/01 05:26:28 thorpej Exp $");
++__KERNEL_RCSID(0, "$NetBSD$");
+ 
+ #include <sys/fstypes.h>
+ #include <sys/proc.h>
+@@ -6612,6 +6612,38 @@ __weak_alias(_lpathconf,rump___sysimpl_lpathconf);
+ __strong_alias(_sys_lpathconf,rump___sysimpl_lpathconf);
+ #endif /* RUMP_KERNEL_IS_LIBC */
+ 
++ssize_t rump___sysimpl_splice(int, off_t *, int, off_t *, size_t);
++ssize_t
++rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, size_t nbytes)
++{
++	register_t retval[2];
++	int error = 0;
++	ssize_t rv = -1;
++	struct sys_splice_args callarg;
++
++	memset(&callarg, 0, sizeof(callarg));
++	SPARG(&callarg, fd_in) = fd_in;
++	SPARG(&callarg, off_in) = off_in;
++	SPARG(&callarg, fd_out) = fd_out;
++	SPARG(&callarg, off_out) = off_out;
++	SPARG(&callarg, nbytes) = nbytes;
++
++	error = rsys_syscall(SYS_splice, &callarg, sizeof(callarg), retval);
++	rsys_seterrno(error);
++	if (error == 0) {
++		if (sizeof(ssize_t) > sizeof(register_t))
++			rv = *(ssize_t *)retval;
++		else
++			rv = *retval;
++	}
++	return rv;
++}
++#ifdef RUMP_KERNEL_IS_LIBC
++__weak_alias(splice,rump___sysimpl_splice);
++__weak_alias(_splice,rump___sysimpl_splice);
++__strong_alias(_sys_splice,rump___sysimpl_splice);
++#endif /* RUMP_KERNEL_IS_LIBC */
++
+ int rump_sys_pipe(int *);
+ int
+ rump_sys_pipe(int *fd)
+@@ -8571,9 +8603,9 @@ struct sysent rump_sysent[] = {
+ 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+ 	},		/* 499 = lpathconf */
+ 	{
+-		.sy_flags = SYCALL_NOSYS,
++		ns(struct sys_splice_args),
+ 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+-	},		/* 500 = filler */
++	},		/* 500 = splice */
+ 	{
+ 		.sy_flags = SYCALL_NOSYS,
+ 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+diff --git a/sys/rump/rump.sysmap b/sys/rump/rump.sysmap
+index 66208119fca7..c8cfb2ff6753 100644
+--- a/sys/rump/rump.sysmap
++++ b/sys/rump/rump.sysmap
+@@ -220,3 +220,4 @@
+ 485  sys___fstatvfs190      __fstatvfs190      rump___sysimpl_fstatvfs190
+ 486  sys___fhstatvfs190     __fhstatvfs190     rump___sysimpl_fhstatvfs190
+ 499  sys_lpathconf          lpathconf          rump___sysimpl_lpathconf
++500  sys_splice             splice             rump___sysimpl_splice
+diff --git a/sys/sys/Makefile b/sys/sys/Makefile
+index a23611cafd08..348c8f0f8d2a 100644
+--- a/sys/sys/Makefile
++++ b/sys/sys/Makefile
+@@ -40,7 +40,7 @@ INCS=	acct.h acl.h agpio.h aio.h ansi.h aout_mids.h ataio.h atomic.h \
+ 	scanio.h sched.h scsiio.h sdt.h select.h selinfo.h sem.h semaphore.h \
+ 	sha1.h sha2.h sha3.h shm.h siginfo.h signal.h signalvar.h sigtypes.h \
+ 	sleepq.h socket.h \
+-	socketvar.h sockio.h spawn.h specificdata.h stat.h \
++	socketvar.h sockio.h spawn.h specificdata.h splice.h stat.h \
+ 	statvfs.h syscall.h syscallargs.h sysctl.h stdarg.h stdbool.h \
+ 	stdint.h swap.h syncobj.h syslimits.h syslog.h \
+ 	tape.h termios.h time.h timeb.h timepps.h timerfd.h times.h timespec.h \
+diff --git a/sys/sys/splice.h b/sys/sys/splice.h
+new file mode 100644
+index 000000000000..6f878407a951
+--- /dev/null
++++ b/sys/sys/splice.h
+@@ -0,0 +1,42 @@
++/*	$NetBSD$	*/
++
++/*-
++ * Copyright (c) 2022 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef _SYS_SPLICE_H_
++#define _SYS_SPLICE_H_
++
++#include <sys/types.h>
++#include <sys/file.h>
++
++int dosplice(int, struct file *, off_t *, int, struct file *, off_t *, size_t,
++			 register_t *);
++int do_spliceread(int, struct file *, void *, size_t, off_t *, int, size_t *);
++int do_splicewrite(int, struct file *, const void *, size_t, off_t *, int,
++				   size_t *);
++int file_offsets(struct file *, off_t *, off_t **);
++
++#endif
+diff --git a/sys/sys/syscall.h b/sys/sys/syscall.h
+index 4fbd81fdd5d7..ac0b6e51cefc 100644
+--- a/sys/sys/syscall.h
++++ b/sys/sys/syscall.h
+@@ -1,4 +1,4 @@
+-/* $NetBSD: syscall.h,v 1.321 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call numbers.
+@@ -1404,6 +1404,9 @@
+ /* syscall: "lpathconf" ret: "long" args: "const char *" "int" */
+ #define	SYS_lpathconf	499
+ 
+-#define	SYS_MAXSYSCALL	500
++/* syscall: "splice" ret: "ssize_t" args: "int" "off_t *" "int" "off_t *" "size_t" */
++#define	SYS_splice	500
++
++#define	SYS_MAXSYSCALL	501
+ #define	SYS_NSYSENT	512
+ #endif /* _SYS_SYSCALL_H_ */
+diff --git a/sys/sys/syscallargs.h b/sys/sys/syscallargs.h
+index 160869416f27..5e99085cdd07 100644
+--- a/sys/sys/syscallargs.h
++++ b/sys/sys/syscallargs.h
+@@ -1,4 +1,4 @@
+-/* $NetBSD: syscallargs.h,v 1.305 2021/11/01 05:26:27 thorpej Exp $ */
++/* $NetBSD$ */
+ 
+ /*
+  * System call argument lists.
+@@ -3356,6 +3356,15 @@ struct sys_lpathconf_args {
+ };
+ check_syscall_args(sys_lpathconf)
+ 
++struct sys_splice_args {
++	syscallarg(int) fd_in;
++	syscallarg(off_t *) off_in;
++	syscallarg(int) fd_out;
++	syscallarg(off_t *) off_out;
++	syscallarg(size_t) nbytes;
++};
++check_syscall_args(sys_splice)
++
+ /*
+  * System call prototypes.
+  */
+@@ -4280,5 +4289,7 @@ int	sys___acl_aclcheck_fd(struct lwp *, const struct sys___acl_aclcheck_fd_args
+ 
+ int	sys_lpathconf(struct lwp *, const struct sys_lpathconf_args *, register_t *);
+ 
++int	sys_splice(struct lwp *, const struct sys_splice_args *, register_t *);
++
+ #endif /* !RUMP_CLIENT */
+ #endif /* _SYS_SYSCALLARGS_H_ */
+diff --git a/tests/lib/libc/sys/Makefile b/tests/lib/libc/sys/Makefile
+index 56ad83a1a01f..603a02d1d9ad 100644
+--- a/tests/lib/libc/sys/Makefile
++++ b/tests/lib/libc/sys/Makefile
+@@ -92,6 +92,7 @@ TESTS_C+=		t_wait
+ TESTS_C+=		t_wait_noproc
+ TESTS_C+=		t_wait_noproc_wnohang
+ TESTS_C+=		t_write
++TESTS_C+=		t_splice
+ 
+ SRCS.t_mprotect=	t_mprotect.c ${SRCS_EXEC_PROT} t_mprotect_helper.c
+ 
+diff --git a/tests/lib/libc/sys/t_splice.c b/tests/lib/libc/sys/t_splice.c
+new file mode 100644
+index 000000000000..509f06de9094
+--- /dev/null
++++ b/tests/lib/libc/sys/t_splice.c
+@@ -0,0 +1,801 @@
++/* $NetBSD$ */
++
++/*-
++ * Copyright (c) 2001, 2008 The NetBSD Foundation, Inc.
++ * All rights reserved.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
++ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
++ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
++ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
++ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
++ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
++ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
++ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
++ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
++ * POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include <sys/cdefs.h>
++
++#include <sys/errno.h>
++#include <sys/ioctl.h>
++#include <sys/signal.h>
++#include <sys/socket.h>
++#include <sys/stat.h>
++#include <sys/types.h>
++#include <sys/unistd.h>
++#include <sys/wait.h>
++
++#include <netdb.h>
++
++#include <atf-c.h>
++#include <atf-c/macros.h>
++#include <errno.h>
++#include <fcntl.h>
++#include <limits.h>
++#include <paths.h>
++#include <signal.h>
++#include <splice.h>
++#include <stdarg.h>
++#include <stdint.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <unistd.h>
++
++#include "h_macros.h"
++
++#define PORT    "3490"
++#define CHECK   0
++#define REQUIRE 1
++
++static int in_fd, out_fd;
++static int handler_hit;
++pid_t pid;
++
++static size_t
++preparation(size_t size)
++{
++	char *buf = NULL;
++	int error, fd;
++	RL(fd = open("/dev/urandom", O_RDONLY, S_IRUSR));
++
++	RL(in_fd = open("read", O_CREAT | O_TRUNC | O_RDWR, S_IRUSR | S_IWUSR));
++
++	REQUIRE_LIBC(buf = malloc(size + 1), NULL);
++	buf[size] = '\0';
++
++	error = read(fd, buf, size);
++	ATF_REQUIRE_MSG((error > 0), "%s\n", "/dev/urandom not working");
++
++	error = write(in_fd, buf, error);
++	ATF_REQUIRE_MSG((error > 0), "%s\n", "read file doesn't have data");
++
++	RL(fsync(in_fd));
++	RL(close(in_fd));
++
++	RL(in_fd = open("read", O_RDONLY, S_IRUSR));
++
++	RL(out_fd = open("write", O_CREAT | O_TRUNC | O_WRONLY, S_IRUSR | S_IWUSR));
++
++	/* return the number of bytes written */
++	return (size_t)error;
++}
++
++static void
++success_check(size_t file_in_size, int severity)
++{
++	struct stat fd_out;
++
++	ATF_REQUIRE_MSG(fsync(out_fd) == 0, "%s\n", "fsync failed");
++
++	RL(fstat(out_fd, &fd_out));
++
++	ATF_CHECK(fd_out.st_size > 0);
++
++	/* fd_out size doesn't contain EOF */
++	if (severity == CHECK)
++		ATF_CHECK_MSG(file_in_size == (size_t)fd_out.st_size, "%s\n",
++					  "splice unsuccessful");
++	else if (severity == REQUIRE)
++		ATF_REQUIRE_MSG(file_in_size == (size_t)fd_out.st_size, "%s\n",
++						"splice unsuccessful");
++}
++
++static void
++cleanup(void)
++{
++	close(in_fd);
++	close(out_fd);
++	unlink("read");
++	unlink("write");
++}
++
++static void
++file_to_file_noffset(size_t len)
++{
++	int err;
++	size_t bytes_to_transfer;
++
++	bytes_to_transfer = preparation(len);
++	ATF_REQUIRE(bytes_to_transfer > 0);
++
++	/* regular files */
++	RL(err = splice(in_fd, NULL, out_fd, NULL, bytes_to_transfer));
++
++	success_check((size_t)err, REQUIRE);
++	success_check(bytes_to_transfer, CHECK);
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_noffset1);
++
++ATF_TC_HEAD(file2file_splice_noffset1, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer small amount of data from one regular file \
++					  to another without any offset");
++}
++
++ATF_TC_BODY(file2file_splice_noffset1, tc)
++{
++	file_to_file_noffset(47);
++}
++
++ATF_TC_CLEANUP(file2file_splice_noffset1, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_noffset2);
++
++ATF_TC_HEAD(file2file_splice_noffset2, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer data more than MAXPHYS from one regular \
++					  file to another without any offset");
++}
++
++ATF_TC_BODY(file2file_splice_noffset2, tc)
++{
++	size_t size_of_maxphys = 64 * 1024;
++	file_to_file_noffset(size_of_maxphys + 100);
++}
++
++ATF_TC_CLEANUP(file2file_splice_noffset2, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_noffset3);
++
++ATF_TC_HEAD(file2file_splice_noffset3, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer large amount of data from one regular \
++					  file to another without any offset");
++}
++
++ATF_TC_BODY(file2file_splice_noffset3, tc)
++{
++	size_t one_gb = 1 * 1024 * 1024 * 1024;
++	file_to_file_noffset(one_gb);
++}
++
++ATF_TC_CLEANUP(file2file_splice_noffset3, tc)
++{
++	cleanup();
++}
++
++static void
++file_to_file_offset(size_t len)
++{
++	int err;
++	off_t off_in, off_out;
++	size_t bytes_to_transfer, data_transferred = 0;
++
++	bytes_to_transfer = preparation(len);
++	ATF_REQUIRE(bytes_to_transfer > 0);
++
++	off_in = off_out = 0;
++	RL(err = splice(in_fd, &off_in, out_fd, &off_out, bytes_to_transfer / 2));
++	data_transferred += (size_t)err;
++
++	/* making sure file offsets haven't changed */
++	ATF_REQUIRE(lseek(in_fd, 0, SEEK_CUR) == 0);
++	ATF_REQUIRE(lseek(out_fd, 0, SEEK_CUR) == 0);
++
++	ATF_CHECK(off_in == off_out);
++	ATF_REQUIRE(off_out == (off_t)data_transferred);
++
++	success_check(data_transferred, REQUIRE);
++	success_check(bytes_to_transfer / 2, CHECK);
++
++	/* write the rest of the data */
++	RL(err = splice(in_fd, &off_in, out_fd, &off_out,
++					(bytes_to_transfer - data_transferred)));
++	data_transferred += (size_t)err;
++
++	/* making sure file offsets haven't changed */
++	ATF_REQUIRE(lseek(in_fd, 0, SEEK_CUR) == 0);
++	ATF_REQUIRE(lseek(out_fd, 0, SEEK_CUR) == 0);
++
++	ATF_CHECK(off_in == off_out);
++	ATF_REQUIRE(off_out == (off_t)data_transferred);
++
++	success_check(data_transferred, REQUIRE);
++	success_check(bytes_to_transfer, CHECK);
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_offset1);
++
++ATF_TC_HEAD(file2file_splice_offset1, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer small amount of data from one regular file \
++					  to another with offset specified for each");
++}
++
++ATF_TC_BODY(file2file_splice_offset1, tc)
++{
++	file_to_file_offset(47);
++}
++
++ATF_TC_CLEANUP(file2file_splice_offset1, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_offset2);
++
++ATF_TC_HEAD(file2file_splice_offset2, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer data more than MAXPHYS from one regular \
++					  file to another with offset specified for each");
++}
++
++ATF_TC_BODY(file2file_splice_offset2, tc)
++{
++	size_t size_of_maxphys = 64 * 1024;
++	file_to_file_offset(size_of_maxphys + 100);
++}
++
++ATF_TC_CLEANUP(file2file_splice_offset2, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(file2file_splice_offset3);
++
++ATF_TC_HEAD(file2file_splice_offset3, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "transfer large amount of data from one regular \
++					  file to another with offset specified for each");
++}
++
++ATF_TC_BODY(file2file_splice_offset3, tc)
++{
++	size_t one_gb = 1 * 1024 * 1024 * 1024;
++	file_to_file_offset(one_gb);
++}
++
++ATF_TC_CLEANUP(file2file_splice_offset3, tc)
++{
++	cleanup();
++}
++
++static void
++pipe_splice_checks(size_t len, int choice)
++{
++	int err, pipe_buf_space, pipefd[2];
++	size_t bytes_to_transfer;
++
++	RL(pipe(pipefd));
++
++	switch (choice) {
++	case 1:
++		ATF_REQUIRE(len != 0);
++		bytes_to_transfer = preparation(len);
++		ATF_REQUIRE(bytes_to_transfer > 0);
++		break;
++	case 2:
++		ATF_CHECK(len == 0);
++		RL(err = ioctl(pipefd[1], FIONSPACE, &pipe_buf_space));
++		bytes_to_transfer = preparation(pipe_buf_space + 100);
++		ATF_REQUIRE(bytes_to_transfer > (size_t)pipe_buf_space);
++		break;
++	default:
++		atf_tc_fail("error in test case\n");
++	}
++
++	RL(pid = fork());
++	if (!pid) {
++		RL(close(pipefd[0]));
++
++		RL(err = splice(in_fd, NULL, pipefd[1], NULL, bytes_to_transfer));
++
++		RL(close(pipefd[1]));
++		/* child finishes here */
++	} else {
++
++		RL(close(pipefd[1]));
++
++		RL(err = splice(pipefd[0], NULL, out_fd, NULL, bytes_to_transfer));
++		RL(close(pipefd[0]));
++
++		wait(NULL);
++		success_check((size_t)err, REQUIRE);
++		success_check(bytes_to_transfer, CHECK);
++	}
++}
++
++ATF_TC_WITH_CLEANUP(pipe_splice_check1);
++
++ATF_TC_HEAD(pipe_splice_check1, tc)
++{
++	atf_tc_set_md_var(tc, "descr", "splice small amount of data between pipes");
++}
++
++ATF_TC_BODY(pipe_splice_check1, tc)
++{
++	pipe_splice_checks(47, 1);
++}
++
++ATF_TC_CLEANUP(pipe_splice_check1, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(pipe_splice_check2);
++
++ATF_TC_HEAD(pipe_splice_check2, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "splice data more than pipe_buffer between pipes");
++}
++
++ATF_TC_BODY(pipe_splice_check2, tc)
++{
++	pipe_splice_checks(0, 2);
++}
++
++ATF_TC_CLEANUP(pipe_splice_check2, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(pipe_splice_check3);
++
++ATF_TC_HEAD(pipe_splice_check3, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "splice data more than MAXPHYS between pipes");
++}
++
++ATF_TC_BODY(pipe_splice_check3, tc)
++{
++	size_t size_of_maxphys = 64 * 1024;
++	pipe_splice_checks((size_of_maxphys + 100), 1);
++}
++
++ATF_TC_CLEANUP(pipe_splice_check3, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(pipe_splice_check4);
++
++ATF_TC_HEAD(pipe_splice_check4, tc)
++{
++	atf_tc_set_md_var(tc, "descr", "splice large amount of data between pipes");
++}
++
++ATF_TC_BODY(pipe_splice_check4, tc)
++{
++	size_t two_mb = 2 * 1024 * 1024;
++	pipe_splice_checks(two_mb, 1);
++}
++
++ATF_TC_CLEANUP(pipe_splice_check4, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(failing_splice_checks);
++
++ATF_TC_HEAD(failing_splice_checks, tc)
++{
++	atf_tc_set_md_var(tc, "descr", "make sure the expected errors occur");
++}
++
++ATF_TC_BODY(failing_splice_checks, tc)
++{
++	int fd_invalid, fd_permission, pipefd[2];
++	off_t offset;
++	size_t bytes_to_transfer;
++
++	bytes_to_transfer = preparation(54);
++	ATF_REQUIRE(bytes_to_transfer > 0);
++
++	/* for regular files */
++	errno = 0;
++	fd_invalid = -1;
++	ATF_REQUIRE_ERRNO(
++		EBADF, splice(fd_invalid, NULL, out_fd, NULL, bytes_to_transfer));
++
++	ATF_REQUIRE_ERRNO(EBADF,
++					  splice(in_fd, NULL, fd_invalid, NULL, bytes_to_transfer));
++
++	fd_permission = open("temp", O_CREAT | O_WRONLY);
++	ATF_CHECK_ERRNO(
++		EBADF, splice(fd_permission, NULL, out_fd, NULL, bytes_to_transfer));
++	RL(close(fd_permission));
++
++	fd_permission = open("temp", O_CREAT | O_RDONLY);
++	ATF_CHECK_ERRNO(
++		EBADF, splice(in_fd, NULL, fd_permission, NULL, bytes_to_transfer));
++	RL(close(fd_permission));
++	RL(unlink("temp"));
++
++	/* pipes */
++	RL(pipe(pipefd));
++	offset = 10;
++
++	ATF_REQUIRE_ERRNO(
++		ESPIPE, splice(in_fd, NULL, pipefd[1], &offset, bytes_to_transfer));
++
++	ATF_REQUIRE_ERRNO(
++		ESPIPE, splice(pipefd[0], &offset, out_fd, NULL, bytes_to_transfer));
++
++	RL(close(pipefd[0]));
++	RL(close(pipefd[1]));
++}
++
++ATF_TC_CLEANUP(failing_splice_checks, tc)
++{
++	cleanup();
++}
++
++static int
++recv_sock_prep(struct addrinfo *hints)
++{
++	int err, listener;
++	struct addrinfo *res, *res_p;
++
++	/* AI_PASSIVE and hostname = NULL to set ai_add = INADDR_ANY */
++	hints->ai_flags = AI_PASSIVE;
++
++	if ((err = getaddrinfo(NULL, PORT, hints, &res)) == -1) {
++		listener = -1;
++		goto out;
++	}
++
++	for (res_p = res; (res_p); res_p = res_p->ai_next) {
++		listener =
++			socket(res_p->ai_family, res_p->ai_socktype, res_p->ai_protocol);
++
++		if (listener < 0)
++			continue;
++
++		if (bind(listener, res_p->ai_addr, res_p->ai_addrlen) == 0)
++			break;
++
++		RL(close(listener));
++	}
++
++	if (res_p == NULL) {
++		listener = -1;
++		goto done;
++	}
++
++	if (listen(listener, 10) == -1) {
++		RL(close(listener));
++		listener = -1;
++	}
++
++done:
++	freeaddrinfo(res);
++out:
++	return listener;
++}
++
++static void
++socket_splice_checks(size_t len, int choice)
++{
++
++	int err, lsockfd, sender, sock_space, receiver;
++	size_t bytes_to_transfer;
++	struct addrinfo hints, *res = NULL, *res_p = NULL;
++	struct sockaddr_storage sender_addr;
++	socklen_t sender_len;
++
++	memset(&hints, 0, sizeof(hints));
++	hints.ai_family = AF_UNSPEC;
++	hints.ai_socktype = SOCK_STREAM;
++
++	/* No AI_PASSIVE and hostname = NULL to set ai_add = loopback address */
++	RL(err = getaddrinfo(NULL, PORT, &hints, &res));
++	RL(lsockfd = recv_sock_prep(&hints));
++
++	switch (choice) {
++	case 1:
++		ATF_REQUIRE(len != 0);
++		bytes_to_transfer = preparation(len);
++		ATF_REQUIRE(bytes_to_transfer > 0);
++		break;
++	case 2:
++		ATF_CHECK(len == 0);
++		RL(err = ioctl(lsockfd, FIONSPACE, &sock_space));
++		bytes_to_transfer = preparation(sock_space + 100);
++		ATF_REQUIRE(bytes_to_transfer > (size_t)sock_space);
++		break;
++	default:
++		atf_tc_fail("error in test case\n");
++	}
++
++	RL(pid = fork());
++	if (!pid) {
++		/* child process */
++
++		/* listen() had already been called from the parent.
++		 * If the child runs and finishes the parent can take it forward
++		 */
++
++		for (res_p = res; res_p != NULL; res_p = res_p->ai_next) {
++			if ((sender = socket(res_p->ai_family, res_p->ai_socktype,
++								 res_p->ai_protocol)) == -1)
++				continue;
++
++			if (connect(sender, res_p->ai_addr, res_p->ai_addrlen) == 0)
++				break;
++
++			close(sender);
++		}
++
++		if (!res_p) {
++			freeaddrinfo(res);
++			atf_tc_fail("couldn't connect to the parent\n");
++		}
++		freeaddrinfo(res);
++
++		/* The child needs to be sender so parent can do verification */
++		/* this will never block */
++
++		RL(err = sendfile(in_fd, NULL, sender, bytes_to_transfer));
++
++		RL(close(sender));
++		exit(0);
++		/* child finishes here */
++	} else {
++
++		/* if the parent runs first, it will automatically block on accept(),
++		 * forcing the child to run
++		 */
++
++		receiver =
++			accept(lsockfd, (struct sockaddr *)&sender_addr, &sender_len);
++		if (receiver == -1) {
++			close(lsockfd);
++			atf_tc_fail("couldn't accept the connection\n");
++		}
++
++		RL(err = splice(receiver, NULL, out_fd, NULL, bytes_to_transfer));
++
++		/* make sure the child has sent that data */
++		waitpid(-1, NULL, 0);
++		RL(close(receiver));
++	}
++
++	/* success_check() */
++	success_check((size_t)err, REQUIRE);
++	success_check(bytes_to_transfer, CHECK);
++
++	RL(close(lsockfd));
++}
++
++ATF_TC_WITH_CLEANUP(socket_splice_sendfile_check1);
++
++ATF_TC_HEAD(socket_splice_sendfile_check1, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "sendfile small amount of data and splice receive it");
++}
++
++ATF_TC_BODY(socket_splice_sendfile_check1, tc)
++{
++	socket_splice_checks(47, 1);
++}
++
++ATF_TC_CLEANUP(socket_splice_sendfile_check1, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(socket_splice_sendfile_check2);
++
++ATF_TC_HEAD(socket_splice_sendfile_check2, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "sendfile data more than socket queue and splice receive \
++					  it");
++}
++
++ATF_TC_BODY(socket_splice_sendfile_check2, tc)
++{
++	socket_splice_checks(0, 2);
++}
++
++ATF_TC_CLEANUP(socket_splice_sendfile_check2, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(socket_splice_sendfile_check3);
++
++ATF_TC_HEAD(socket_splice_sendfile_check3, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "sendfile data more than MAXPHYS and splice receive it");
++}
++
++ATF_TC_BODY(socket_splice_sendfile_check3, tc)
++{
++	size_t size_of_maxphys = 64 * 1024;
++	socket_splice_checks((size_of_maxphys + 100), 1);
++}
++
++ATF_TC_CLEANUP(socket_splice_sendfile_check3, tc)
++{
++	cleanup();
++}
++
++ATF_TC_WITH_CLEANUP(socket_splice_sendfile_check4);
++
++ATF_TC_HEAD(socket_splice_sendfile_check4, tc)
++{
++	atf_tc_set_md_var(tc, "descr",
++					  "sendfile large amount of data and splice receive it");
++}
++
++ATF_TC_BODY(socket_splice_sendfile_check4, tc)
++{
++	size_t two_mb = 2 * 1024 * 1024;
++	socket_splice_checks(two_mb, 1);
++}
++
++ATF_TC_CLEANUP(socket_splice_sendfile_check4, tc)
++{
++	cleanup();
++}
++
++static void
++sighand(int signo)
++{
++	if (signo == SIGALRM)
++		kill(pid, SIGINFO);
++
++	if (signo == SIGINFO)
++		handler_hit += 1;
++}
++
++ATF_TC_WITH_CLEANUP(splice_signal_check);
++
++ATF_TC_HEAD(splice_signal_check, tc)
++{
++	atf_tc_set_md_var(
++		tc, "descr", "write data from a regular file to a pipe and try to read \
++					as much as possible, because the write gets interrupted by \
++					a signal");
++}
++
++ATF_TC_BODY(splice_signal_check, tc)
++{
++	int err, pipefd[2], status;
++	sigset_t asigset, emptysigset, osigset;
++	struct sigaction act, oact;
++	size_t bytes_to_transfer;
++
++	RL(pipe(pipefd));
++
++	bytes_to_transfer = preparation(2 * 1024 * 1024);
++	ATF_REQUIRE(bytes_to_transfer > 0);
++
++	RL(sigemptyset(&emptysigset));
++	RL(sigemptyset(&asigset));
++	RL(sigaddset(&asigset, SIGINFO));
++
++	memset(&act, 0, sizeof(act));
++	memset(&oact, 0, sizeof(oact));
++	act.sa_handler = sighand;
++	act.sa_flags = 0;
++	RL(sigemptyset(&act.sa_mask));
++
++	RL(sigaction(SIGALRM, &act, &oact));
++	RL(sigaction(SIGINFO, &act, &oact));
++
++	handler_hit = 0;
++
++	RL(pid = fork());
++	if (!pid) {
++		RL(close(pipefd[1]));
++		size_t chunk = 128 * 1024;
++		size_t read = 0;
++
++		RL(err = splice(pipefd[0], NULL, out_fd, NULL, chunk));
++		fprintf(stderr, "first read in child: %i\n", err);
++		read += (size_t)err;
++
++		RL(sigprocmask(SIG_BLOCK, &asigset, &osigset));
++		while (handler_hit == 0) {
++			if (sigsuspend(&emptysigset) == -1 || errno == EINTR)
++				break;
++			// atf_tc_fail("sigsuspend(&emptysigset): %s",
++			//     strerror(errno));
++		}
++		RL(sigprocmask(SIG_SETMASK, &osigset, NULL));
++
++		chunk = bytes_to_transfer - read;
++		RL(err = splice(pipefd[0], NULL, out_fd, NULL, chunk));
++		read += (size_t)err;
++
++		printf("data read: %li\n", read);
++		printf("data expected: %li\n", bytes_to_transfer);
++		success_check(read, REQUIRE);
++
++		RL(close(pipefd[0]));
++
++		exit(0);
++		/* child finishes here */
++
++	} else {
++
++		RL(close(pipefd[0]));
++		alarm(2);
++
++		RL(err = splice(in_fd, NULL, pipefd[1], NULL, bytes_to_transfer));
++
++		fprintf(stdout, "moved: %i\n", err);
++		RL(close(pipefd[1]));
++
++		waitpid(pid, &status, 0);
++		ATF_REQUIRE_EQ(WEXITSTATUS(status), 0);
++	}
++}
++
++ATF_TC_CLEANUP(splice_signal_check, tc)
++{
++	cleanup();
++}
++
++ATF_TP_ADD_TCS(tp)
++{
++	ATF_TP_ADD_TC(tp, file2file_splice_noffset1);
++	ATF_TP_ADD_TC(tp, file2file_splice_noffset2);
++	ATF_TP_ADD_TC(tp, file2file_splice_noffset3);
++	ATF_TP_ADD_TC(tp, file2file_splice_offset1);
++	ATF_TP_ADD_TC(tp, file2file_splice_offset2);
++	ATF_TP_ADD_TC(tp, file2file_splice_offset3);
++	ATF_TP_ADD_TC(tp, pipe_splice_check1);
++	ATF_TP_ADD_TC(tp, pipe_splice_check2);
++	ATF_TP_ADD_TC(tp, pipe_splice_check3);
++	ATF_TP_ADD_TC(tp, pipe_splice_check4);
++	ATF_TP_ADD_TC(tp, failing_splice_checks);
++	ATF_TP_ADD_TC(tp, socket_splice_sendfile_check1);
++	ATF_TP_ADD_TC(tp, socket_splice_sendfile_check2);
++	ATF_TP_ADD_TC(tp, socket_splice_sendfile_check3);
++	ATF_TP_ADD_TC(tp, socket_splice_sendfile_check4);
++	ATF_TP_ADD_TC(tp, splice_signal_check);
++
++	return atf_no_error();
++}
