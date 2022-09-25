@@ -1,11 +1,8 @@
-/*	$NetBSD: splicev.h 2022/07/21 TIME NAME $	*/
+/*	$NetBSD$	*/
 
 /*-
- * Copyright (c) 2009 The NetBSD Foundation, Inc.
+ * Copyright (c) 2022 The NetBSD Foundation, Inc.
  * All rights reserved.
- *
- * This code is derived from software contributed to The NetBSD Foundation
- * by Andrew Doran.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,24 +24,26 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *
  */
 
 #include <sys/cdefs.h>
+__COPYRIGHT("@(#) Copyright (c) 2022\
+ The NetBSD Foundation, inc. All rights reserved.");
+__RCSID("$NetBSD$");
 
 #include <sys/atomic.h>
-#include <sys/file.h>
 #include <sys/filedesc.h>
 #include <sys/filio.h>
 #include <sys/kauth.h>
 #include <sys/kernel.h>
 #include <sys/kmem.h>
 #include <sys/ktrace.h>
+#include <sys/lwp.h>
 #include <sys/mount.h>
 #include <sys/param.h>
 #include <sys/pax.h>
 #include <sys/proc.h>
+#include <sys/splice.h>
 #include <sys/stat.h>
 #include <sys/syscallargs.h>
 #include <sys/sysctl.h>
@@ -56,21 +55,22 @@
 #define KBUF_SIZE(bytes_to_transfer) (MIN(bytes_to_transfer, MAXPHYS))
 
 /*
- * Splicev system call.
+ * Splice system call.
  */
 /* ARGUSED */
-
-int dosplice(int, struct file *, off_t *, int, struct file *, off_t *, size_t,
-			 void *, size_t *, register_t *);
-int do_spliceread(int, struct file *, void *, size_t, off_t *, int, size_t *);
-int do_splicewrite(int, struct file *, const void *, size_t, off_t *, int,
-				   size_t *);
-int file_offsets(struct file *, off_t *, off_t **);
 
 int
 sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 {
-	int error, fd_in, fd_out;
+	/* {
+		syscallarg(int)		fd_in;
+		syscallarg(off_t *)	off_in;
+		syscallarg(int)		fd_out;
+		syscallarg(off_t *)	off_out;
+		syscallarg(size_t)	nbytes;
+	} */
+
+	int error, ret, fd_in, fd_out;
 	off_t *off_in, *off_out;
 	off_t *in_off, *out_off;
 	size_t nbytes;
@@ -89,61 +89,63 @@ sys_splice(struct lwp *l, const struct sys_splice_args *uap, register_t *retval)
 	if (!nbytes)
 		return 0;
 
-	error = EBADF;
+	error = 0;
 	if ((fp_in = fd_getfile(fd_in)) == NULL)
+		return (EBADF);
+
+	if ((fp_in->f_flag & FREAD) == 0) {
+		fd_putfile(fd_in);
+		return (EBADF);
+	}
+
+	if ((fp_out = fd_getfile(fd_out)) == NULL) {
+		fd_putfile(fd_in);
+		return (EBADF);
+	}
+
+	if ((fp_out->f_flag & FWRITE) == 0) {
+		error = EBADF;
 		goto out;
+	}
 
-	if ((fp_in->f_flag & FREAD) == 0)
-		goto done;
-
-	if ((fp_out = fd_getfile(fd_out)) == NULL)
-		goto done;
-
-	if ((fp_out->f_flag & FWRITE) == 0)
-		goto done;
-
+	ret = 0;
 	in_off = out_off = NULL;
 
+	/* seek to the file location if offset for fd_in is present and valid */
 	if (off_in) {
-		error = file_offsets(fp_in, off_in, &in_off);
-		if (error)
-			goto done;
+		if ((error = file_offsets(fp_in, off_in, &in_off)))
+			goto out;
 	}
 
+	/* seek to the file location if offset for fd_out is present and valid */
 	if (off_out) {
-		error = file_offsets(fp_out, off_out, &out_off);
-		if (error)
-			goto done;
+		if ((error = file_offsets(fp_out, off_out, &out_off)))
+			goto out;
 	}
 
-	error = dosplice(fd_in, fp_in, in_off, fd_out, fp_out, out_off, nbytes,
-					SCARG(uap, excess_buffer), SCARG(uap, buffer_size), retval);
-	if (error)
-		goto done;
+	ret = dosplice(fd_in, fp_in, in_off, fd_out, fp_out, out_off, nbytes,
+				   retval);
 
 	if (in_off) {
 		error = copyout(in_off, off_in, sizeof(*in_off));
-		if (error)
-			goto done;
+		kmem_free(in_off, sizeof(*in_off));
+		if (!ret && error)
+			ret = error;
 	}
 
 	if (out_off) {
 		error = copyout(out_off, off_out, sizeof(*out_off));
-		if (error)
-			goto done;
+		kmem_free(out_off, sizeof(*out_off));
+		if (!ret && error)
+			ret = error;
 	}
 
-done:
-	if (fp_in)
-		fd_putfile(fd_in);
-	if (fp_out)
-		fd_putfile(fd_out);
-	if (in_off)
-		kmem_free(in_off, sizeof(*in_off));
-	if (out_off)
-		kmem_free(out_off, sizeof(*out_off));
+	error = ret;
 
 out:
+	fd_putfile(fd_in);
+	fd_putfile(fd_out);
+
 	return error;
 }
 
@@ -241,10 +243,9 @@ file_offsets(struct file *fp, off_t *user_offset, off_t **kernel_offset)
 	/* offset = NULL; done this way due to 'Werror=Unused-but-set-variable' */
 	off_t *offset = *kernel_offset;
 
-	if (fp->f_ops->fo_seek == NULL) {
-		error = ESPIPE;
-		goto out;
-	} else {
+	if (fp->f_ops->fo_seek == NULL)
+		return (ESPIPE);
+	else {
 		offset = kmem_alloc(sizeof(*offset), KM_SLEEP);
 		error = copyin(user_offset, offset, sizeof(*offset));
 		if (error)
@@ -255,41 +256,38 @@ file_offsets(struct file *fp, off_t *user_offset, off_t **kernel_offset)
 			goto out;
 	}
 
-out:
 	*kernel_offset = offset;
+	return 0;
+out:
+	kmem_free(offset, sizeof(*offset));
+	*kernel_offset = NULL;
 	return error;
 }
 
 int
 dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
-		 struct file *fp_out, off_t *off_out, size_t len, void *excess_buffer,
-		 size_t *buffer_size, register_t *retval)
+		 struct file *fp_out, off_t *off_out, size_t len, register_t *retval)
 {
 	int error, ioctl_ret;
 	off_t offset;
-	size_t bytes_written, bytes_to_write, write_size, bytes_transferred,
+	size_t bytes_written, bytes_to_write, bytes_transferred, write_size,
 		total_bytes_transferred;
 	void *kernel_buffer = NULL, *kbuf_p = NULL;
 
 	error = 0;
 
-	if ((fp_in->f_type == DTYPE_PIPE) && (fp_out->f_type == DTYPE_PIPE))
-		if (fp_in->f_pipe == fp_out->f_pipe) {
-			error = EINVAL;
-			goto done;
-		}
-
 	kernel_buffer = kmem_alloc(KBUF_SIZE(len), KM_SLEEP);
 
-	total_bytes_transferred = 0;
+	total_bytes_transferred = bytes_to_write = bytes_written = ioctl_ret = 0;
 
 	while (total_bytes_transferred < len) {
+		bytes_transferred = 0;
 		offset = off_in ? *off_in : fp_in->f_offset;
-		bytes_to_write = bytes_written = ioctl_ret = 0;
+
 		error = do_spliceread(fd_in, fp_in, kernel_buffer, KBUF_SIZE(len),
 							  &offset, FOF_UPDATE_OFFSET, &bytes_to_write);
 		if (error)
-			goto done;
+			goto out;
 
 		/* no more data in the recv queue */
 		if (bytes_to_write == 0)
@@ -301,81 +299,56 @@ dosplice(int fd_in, struct file *fp_in, off_t *off_in, int fd_out,
 			fp_in->f_offset = offset;
 
 		while (bytes_to_write > 0) {
-			bytes_transferred = 0;
 			error = (*fp_out->f_ops->fo_ioctl)(fp_out, FIONSPACE, &ioctl_ret);
 			if (error)
-				goto done;
-			else {
-				if (ioctl_ret == 0) {
-					if (fp_out->f_type == DTYPE_VNODE)
-						write_size = bytes_to_write;
-					else
-						/*
-						 * can't go further, until there is space available on
-						 * the queue
-						 */
-						break;
-					/* write to the excess_buffer */
-				} else
-					write_size = MIN(ioctl_ret, bytes_to_write);
-			}
+				goto out;
 
-write:
-			kbuf_p = (void *)((uintptr_t)kernel_buffer +
-								total_bytes_transferred);
+			if (ioctl_ret == 0)
+				/*
+				 * Two possible cases here:-
+				 * - Either the fd corresponds to a regular file, in which case
+				 *   ioctl_ret = 0, and there is no write queue.
+				 * - Second, no space is available on the send queue, so we
+				 *   attempt a write of the max possible size i.e. (the number
+				 *   of bytes read) which will block, eventually succeeding
+				 *   either partially or completely.
+				 */
+				write_size = bytes_to_write;
+			else
+				write_size = MIN(ioctl_ret, bytes_to_write);
+
+		write:
+			kbuf_p = (void *)((uintptr_t)kernel_buffer + bytes_transferred);
 			offset = off_out ? *off_out : fp_out->f_offset;
+
 			error = do_splicewrite(fd_out, fp_out, kbuf_p, write_size, &offset,
 								   FOF_UPDATE_OFFSET, &bytes_written);
 			if (error)
-				goto done;
+				goto out;
 
 			if (off_out)
 				*off_out = offset;
 			else
 				fp_out->f_offset = offset;
 
+			bytes_to_write -= bytes_written;
 			bytes_transferred += bytes_written;
-			total_bytes_transferred += bytes_written;
 
 			/* send queue only partially filled */
-			if (bytes_written != write_size) {
+			if ((bytes_written != write_size) && (ioctl_ret != 0)) {
 				write_size -= bytes_written;
 				goto write;
 			}
-			bytes_to_write -= bytes_transferred;
 		}
-
-		/* case of short write */
-		if (bytes_to_write > 0) {
-
-			/*
-			 * once we are in this, we are not going back up to the loop
-			 * we can set retval here itself
-			 */
-
-			/* write the data already read in */
-			error = copyout((void *)((uintptr_t)kernel_buffer +
-								total_bytes_transferred), excess_buffer,
-							bytes_to_write);
-			if (error)
-				goto done;
-			else {
-				error = copyout(&bytes_to_write, buffer_size, sizeof(size_t));
-				if (error)
-					goto done;
-				else
-					break;
-			}
-		}
+		total_bytes_transferred += bytes_transferred;
 	}
 
-	/* return unread bytes */
-	*retval = len - total_bytes_transferred - bytes_to_write;
-	error = 0;
-
-done:
-	if (kernel_buffer)
-		kmem_free(kernel_buffer, KBUF_SIZE(len));
-
+out:
+	kmem_free(kernel_buffer, KBUF_SIZE(len));
+	if (error)
+		if (total_bytes_transferred > 0 &&
+			(error == ERESTART || error == EINTR || error == EWOULDBLOCK))
+			error = 0;
+	*retval = total_bytes_transferred;
 	return error;
 }

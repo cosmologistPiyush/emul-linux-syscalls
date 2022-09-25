@@ -550,8 +550,8 @@ const char *const syscallnames[] = {
 	/* 497 */	"__acl_aclcheck_file",
 	/* 498 */	"__acl_aclcheck_fd",
 	/* 499 */	"lpathconf",
-	/* 500 */	"splicev",
-	/* 501 */	"splice",
+	/* 500 */	"splice",
+	/* 501 */	"# filler",
 	/* 502 */	"# filler",
 	/* 503 */	"# filler",
 	/* 504 */	"# filler",
@@ -1087,8 +1087,8 @@ const char *const altsyscallnames[] = {
 	/* 497 */	NULL, /* __acl_aclcheck_file */
 	/* 498 */	NULL, /* __acl_aclcheck_fd */
 	/* 499 */	NULL, /* lpathconf */
-	/* 500 */	NULL, /* splicev */
-	/* 501 */	NULL, /* splice */
+	/* 500 */	NULL, /* splice */
+	/* 501 */	NULL, /* filler */
 	/* 502 */	NULL, /* filler */
 	/* 503 */	NULL, /* filler */
 	/* 504 */	NULL, /* filler */

@@ -26,17 +26,16 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _SYS_SPLICE_H_
-#define _SYS_SPLICE_H_
+#ifndef _SPLICE_H_
+#define _SPLICE_H_
 
 #include <sys/types.h>
-#include <sys/file.h>
 
-int dosplice(int, struct file *, off_t *, int, struct file *, off_t *, size_t,
-			 register_t *);
-int do_spliceread(int, struct file *, void *, size_t, off_t *, int, size_t *);
-int do_splicewrite(int, struct file *, const void *, size_t, off_t *, int,
-				   size_t *);
-int file_offsets(struct file *, off_t *, off_t **);
+__BEGIN_DECLS
+
+ssize_t splice(int, off_t *, int, off_t *, size_t);
+ssize_t sendfile(int, off_t *, int, size_t);
+
+__END_DECLS
 
 #endif

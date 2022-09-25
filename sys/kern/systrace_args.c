@@ -3887,29 +3887,15 @@ systrace_args(register_t sysnum, const void *params, uintptr_t *uarg, size_t *n_
 		*n_args = 2;
 		break;
 	}
-	/* sys_splicev */
-	case 500: {
-		const struct sys_splicev_args *p = params;
-		iarg[0] = SCARG(p, fd_in); /* int */
-		iarg[1] = SCARG(p, PAD); /* int */
-		iarg[2] = SCARG(p, offset); /* off_t */
-		iarg[3] = SCARG(p, fd_out); /* int */
-		uarg[4] = SCARG(p, len); /* size_t */
-		uarg[5] = (intptr_t) SCARG(p, ops); /* struct spliceops * */
-		*n_args = 6;
-		break;
-	}
 	/* sys_splice */
-	case 501: {
+	case 500: {
 		const struct sys_splice_args *p = params;
 		iarg[0] = SCARG(p, fd_in); /* int */
 		uarg[1] = (intptr_t) SCARG(p, off_in); /* off_t * */
 		iarg[2] = SCARG(p, fd_out); /* int */
 		uarg[3] = (intptr_t) SCARG(p, off_out); /* off_t * */
 		uarg[4] = SCARG(p, nbytes); /* size_t */
-		uarg[5] = (intptr_t) SCARG(p, excess_buffer); /* void * */
-		uarg[6] = (intptr_t) SCARG(p, buffer_size); /* size_t * */
-		*n_args = 7;
+		*n_args = 5;
 		break;
 	}
 	default:
@@ -10517,38 +10503,13 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		};
 		break;
-	/* sys_splicev */
+	/* sys_splice */
 	case 500:
 		switch(ndx) {
 		case 0:
 			p = "int";
 			break;
 		case 1:
-			p = "int";
-			break;
-		case 2:
-			p = "off_t";
-			break;
-		case 3:
-			p = "int";
-			break;
-		case 4:
-			p = "size_t";
-			break;
-		case 5:
-			p = "struct spliceops *";
-			break;
-		default:
-			break;
-		};
-		break;
-	/* sys_splice */
-	case 501:
-		switch(ndx) {
-		case 0:
-			p = "int";
-			break;
-		case 1:
 			p = "off_t *";
 			break;
 		case 2:
@@ -10559,12 +10520,6 @@ systrace_entry_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 			break;
 		case 4:
 			p = "size_t";
-			break;
-		case 5:
-			p = "void *";
-			break;
-		case 6:
-			p = "size_t *";
 			break;
 		default:
 			break;
@@ -12772,13 +12727,8 @@ systrace_return_setargdesc(int sysnum, int ndx, char *desc, size_t descsz)
 		if (ndx == 0 || ndx == 1)
 			p = "long";
 		break;
-	/* sys_splicev */
-	case 500:
-		if (ndx == 0 || ndx == 1)
-			p = "int";
-		break;
 	/* sys_splice */
-	case 501:
+	case 500:
 		if (ndx == 0 || ndx == 1)
 			p = "ssize_t";
 		break;

@@ -6612,42 +6612,9 @@ __weak_alias(_lpathconf,rump___sysimpl_lpathconf);
 __strong_alias(_sys_lpathconf,rump___sysimpl_lpathconf);
 #endif /* RUMP_KERNEL_IS_LIBC */
 
-int rump___sysimpl_splicev(int, off_t, int, size_t, struct spliceops *);
-int
-rump___sysimpl_splicev(int fd_in, off_t offset, int fd_out, size_t len, struct spliceops * ops)
-{
-	register_t retval[2];
-	int error = 0;
-	int rv = -1;
-	struct sys_splicev_args callarg;
-
-	memset(&callarg, 0, sizeof(callarg));
-	SPARG(&callarg, fd_in) = fd_in;
-	SPARG(&callarg, PAD) = 0;
-	SPARG(&callarg, offset) = offset;
-	SPARG(&callarg, fd_out) = fd_out;
-	SPARG(&callarg, len) = len;
-	SPARG(&callarg, ops) = ops;
-
-	error = rsys_syscall(SYS_splicev, &callarg, sizeof(callarg), retval);
-	rsys_seterrno(error);
-	if (error == 0) {
-		if (sizeof(int) > sizeof(register_t))
-			rv = *(int *)retval;
-		else
-			rv = *retval;
-	}
-	return rv;
-}
-#ifdef RUMP_KERNEL_IS_LIBC
-__weak_alias(splicev,rump___sysimpl_splicev);
-__weak_alias(_splicev,rump___sysimpl_splicev);
-__strong_alias(_sys_splicev,rump___sysimpl_splicev);
-#endif /* RUMP_KERNEL_IS_LIBC */
-
-ssize_t rump___sysimpl_splice(int, off_t *, int, off_t *, size_t, void *, size_t *);
+ssize_t rump___sysimpl_splice(int, off_t *, int, off_t *, size_t);
 ssize_t
-rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, size_t nbytes, void * excess_buffer, size_t * buffer_size)
+rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, size_t nbytes)
 {
 	register_t retval[2];
 	int error = 0;
@@ -6660,8 +6627,6 @@ rump___sysimpl_splice(int fd_in, off_t * off_in, int fd_out, off_t * off_out, si
 	SPARG(&callarg, fd_out) = fd_out;
 	SPARG(&callarg, off_out) = off_out;
 	SPARG(&callarg, nbytes) = nbytes;
-	SPARG(&callarg, excess_buffer) = excess_buffer;
-	SPARG(&callarg, buffer_size) = buffer_size;
 
 	error = rsys_syscall(SYS_splice, &callarg, sizeof(callarg), retval);
 	rsys_seterrno(error);
@@ -8638,13 +8603,13 @@ struct sysent rump_sysent[] = {
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
 	},		/* 499 = lpathconf */
 	{
-		ns(struct sys_splicev_args),
-		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 500 = splicev */
-	{
 		ns(struct sys_splice_args),
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
-	},		/* 501 = splice */
+	},		/* 500 = splice */
+	{
+		.sy_flags = SYCALL_NOSYS,
+		.sy_call = (sy_call_t *)(void *)rumpns_enosys,
+	},		/* 501 = filler */
 	{
 		.sy_flags = SYCALL_NOSYS,
 		.sy_call = (sy_call_t *)(void *)rumpns_enosys,

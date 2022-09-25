@@ -1,11 +1,8 @@
-/*	$NetBSD: splicev.h 2022/07/21 TIME NAME $	*/
+/*	$NetBSD$	*/
 
 /*-
- * Copyright (c) 2009 The NetBSD Foundation, Inc.
+ * Copyright (c) 2022 The NetBSD Foundation, Inc.
  * All rights reserved.
- *
- * This code is derived from software contributed to The NetBSD Foundation
- * by Andrew Doran.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,56 +24,28 @@
  * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
- *
- *
  */
 
-#ifndef _SYS_SPLICEV_H_
-#define _SYS_SPLICEV_H_
-
-#include <sys/cdefs.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
 #include <sys/types.h>
-#include <sys/uio.h>
 
-struct sf_hdtr {
-  struct iovec *hdr;
-  size_t hdrlen;
-  struct iovec *trlr;
-  size_t trlen;
-};
+#include <errno.h>
+#include <splice.h>
 
-struct sendfile_args {
-  /* all the args are from FreeBSD */
-  struct sf_hdtr *hdtr;
-  off_t *sbytes;
-  int flags;
-};
+ssize_t sendfile(int, off_t *, int, size_t);
 
-struct splice_args {
-  off_t off_out;
-  unsigned int flags;
-};
+ssize_t
+sendfile(int fd_in, off_t *offset, int sockfd, size_t nbytes)
+{
+	struct stat sock_stat;
 
-enum action { SPLICE, SENDFILE };
+	if (fstat(sockfd, &sock_stat) == 0) {
+		if (S_ISSOCK(sock_stat.st_mode))
+			return splice(fd_in, offset, sockfd, NULL, nbytes);
+		else
+			return (EBADF);
+	}
 
-struct spliceops {
-  enum action choice;
-  union {
-    struct splice_args *spargs;
-    struct sendfile_args *sfargs;
-  } op;
-};
-
-#define spliceargs		op.spargs
-#define sendfileargs	op.sfargs
-#define sp_offset		spliceargs->out_off
-#define sp_flags		spliceargs->flags
-#define sf_shdtr		sendfileargs->hdtr
-#define sf_sbytes		sendfileargs->sbytes
-#define sf_flags		sendfileargs.flags
-
-int splicev(int, off_t, int, size_t, struct spliceops*);
-
-/*TODO: define flags */
-
-#endif
+	return 0;
+}
