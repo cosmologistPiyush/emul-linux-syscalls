@@ -24,7 +24,7 @@ implementation plan for the project, and we decided in favor of a generic
 system call that will transfer data from the file descriptor, *fd_in*,
 to the out file descriptor, *fd_out*, inside the kernel space.  
 <p align="center">
-ssize_t splice(int fd_in, off_t off_in, int fd_out, off_t off_out,
+ssize_t splice(int fd_in, off_t \*off_in, int fd_out, off_t \*off_out,
 size_t len);  
 </p>
 The plan had been to make this generic implementation support both
