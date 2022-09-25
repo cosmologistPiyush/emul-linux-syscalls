@@ -153,7 +153,7 @@ ASM=\
 		setuid.S __shmctl50.S shmdt.S shmget.S shutdown.S \
 		sigqueueinfo.S \
 		__sigaltstack14.S __sigpending14.S __sigaction_sigtramp.S \
-		____sigtimedwait50.S __socket30.S socketpair.S __stat50.S \
+		____sigtimedwait50.S __socket30.S socketpair.S splice.S __stat50.S \
 		__statvfs190.S swapctl.S symlink.S symlinkat.S __sysctl.S \
 	timer_create.S timer_delete.S __timer_gettime50.S timer_getoverrun.S \
 		____semctl50.S __timer_settime50.S \
@@ -189,8 +189,7 @@ WEAKASM= accept.S __aio_suspend50.S clock_nanosleep.S close.S connect.S \
 	_sched_getaffinity.S sched_yield.S _sched_protect.S \
 	__select50.S sendmmsg.S sendmsg.S sendto.S \
 	setcontext.S __sigprocmask14.S __sigsuspend14.S sysarch.S \
-	__wait450.S wait6.S write.S writev.S \
-	splice.S
+	__wait450.S wait6.S write.S writev.S
 
 NOERR=	getegid.S geteuid.S getgid.S getpid.S getppid.S getuid.S \
 	issetugid.S posix_spawn.S sync.S __posix_fadvise50.S
@@ -291,7 +290,8 @@ MAN+=	accept.2 access.2 acct.2 adjtime.2 bind.2 brk.2 chdir.2 \
 	shutdown.2 sigaction.2 sigaltstack.2 sigpending.2 \
 	sigprocmask.2 sigqueue.2 sigstack.2 sigsuspend.2 sigtimedwait.2 \
 	socket.2 \
-	socketpair.2 stat.2 statvfs.2 swapctl.2 swapon.3 symlink.2 \
+	socketpair.2 splice.2 \
+	stat.2 statvfs.2 swapctl.2 swapon.3 symlink.2 \
 	sync.2 sysarch.2 syscall.2 timer_create.2 timer_delete.2 \
 	timer_settime.2 timerfd.2 truncate.2 umask.2 undelete.2 \
 	unlink.2 utimes.2 utrace.2 uuidgen.2 vfork.2 wait.2 write.2

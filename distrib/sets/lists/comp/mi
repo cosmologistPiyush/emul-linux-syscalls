@@ -3213,6 +3213,7 @@
 ./usr/include/smbfs				comp-obsolete		obsolete
 ./usr/include/soundcard.h			comp-c-include
 ./usr/include/spawn.h				comp-c-include
+./usr/include/splice.h				comp-c-include
 ./usr/include/sqlite3.h				comp-c-include
 ./usr/include/sqlite3ext.h			comp-c-include
 ./usr/include/ssp/ssp.h				comp-c-include
@@ -3435,7 +3436,6 @@
 ./usr/include/sys/soundcard.h			comp-c-include
 ./usr/include/sys/spawn.h			comp-c-include
 ./usr/include/sys/specificdata.h		comp-c-include
-./usr/include/sys/splicev.h		comp-c-include
 ./usr/include/sys/splice.h		comp-c-include
 ./usr/include/sys/stat.h			comp-c-include
 ./usr/include/sys/statvfs.h			comp-c-include
@@ -4916,6 +4916,7 @@
 ./usr/share/man/cat2/sigwaitinfo.0		comp-c-catman		.cat
 ./usr/share/man/cat2/socket.0			comp-c-catman		.cat
 ./usr/share/man/cat2/socketpair.0		comp-c-catman		.cat
+./usr/share/man/cat2/splice.0		comp-c-catman		.cat
 ./usr/share/man/cat2/stat.0			comp-c-catman		.cat
 ./usr/share/man/cat2/statfs.0			comp-obsolete		obsolete
 ./usr/share/man/cat2/statvfs.0			comp-c-catman		.cat
@@ -10131,6 +10132,7 @@
 ./usr/share/man/cat3/sem_trywait.0		comp-c-catman		.cat
 ./usr/share/man/cat3/sem_unlink.0		comp-c-catman		.cat
 ./usr/share/man/cat3/sem_wait.0			comp-c-catman		.cat
+./usr/share/man/cat3/sendfile.0			comp-c-catman		.cat
 ./usr/share/man/cat3/set_com_err_hook.0		comp-krb5-catman	kerberos,.cat
 ./usr/share/man/cat3/set_current_field.0	comp-c-catman		.cat
 ./usr/share/man/cat3/set_current_item.0		comp-c-catman		.cat
@@ -13274,6 +13276,7 @@
 ./usr/share/man/html2/sigwaitinfo.html		comp-c-htmlman		html
 ./usr/share/man/html2/socket.html		comp-c-htmlman		html
 ./usr/share/man/html2/socketpair.html		comp-c-htmlman		html
+./usr/share/man/html2/splice.html		comp-c-htmlman		html
 ./usr/share/man/html2/stat.html			comp-c-htmlman		html
 ./usr/share/man/html2/statvfs.html		comp-c-htmlman		html
 ./usr/share/man/html2/statvfs1.html		comp-c-htmlman		html
@@ -18429,6 +18432,7 @@
 ./usr/share/man/html3/sem_trywait.html		comp-c-htmlman		html
 ./usr/share/man/html3/sem_unlink.html		comp-c-htmlman		html
 ./usr/share/man/html3/sem_wait.html		comp-c-htmlman		html
+./usr/share/man/html3/sendfile.html			comp-c-htmlman		html
 ./usr/share/man/html3/set_com_err_hook.html	comp-krb5-htmlman	kerberos,html
 ./usr/share/man/html3/set_current_field.html	comp-c-htmlman		html
 ./usr/share/man/html3/set_current_item.html	comp-c-htmlman		html
@@ -21472,6 +21476,7 @@
 ./usr/share/man/man2/sigwaitinfo.2		comp-c-man		.man
 ./usr/share/man/man2/socket.2			comp-c-man		.man
 ./usr/share/man/man2/socketpair.2		comp-c-man		.man
+./usr/share/man/man2/splice.2		comp-c-man		.man
 ./usr/share/man/man2/stat.2			comp-c-man		.man
 ./usr/share/man/man2/statfs.2			comp-obsolete		obsolete
 ./usr/share/man/man2/statvfs.2			comp-c-man		.man
@@ -26733,6 +26738,7 @@
 ./usr/share/man/man3/sem_trywait.3		comp-c-man		.man
 ./usr/share/man/man3/sem_unlink.3		comp-c-man		.man
 ./usr/share/man/man3/sem_wait.3			comp-c-man		.man
+./usr/share/man/man3/sendfile.3			comp-c-man		.man
 ./usr/share/man/man3/set_com_err_hook.3		comp-krb5-man		kerberos,.man
 ./usr/share/man/man3/set_current_field.3	comp-c-man		.man
 ./usr/share/man/man3/set_current_item.3		comp-c-man		.man

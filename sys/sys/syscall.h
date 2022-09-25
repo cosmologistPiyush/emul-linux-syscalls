@@ -1404,12 +1404,9 @@
 /* syscall: "lpathconf" ret: "long" args: "const char *" "int" */
 #define	SYS_lpathconf	499
 
-/* syscall: "splicev" ret: "int" args: "int" "int" "off_t" "int" "size_t" "struct spliceops *" */
-#define	SYS_splicev	500
+/* syscall: "splice" ret: "ssize_t" args: "int" "off_t *" "int" "off_t *" "size_t" */
+#define	SYS_splice	500
 
-/* syscall: "splice" ret: "ssize_t" args: "int" "off_t *" "int" "off_t *" "size_t" "int" */
-#define	SYS_splice	501
-
-#define	SYS_MAXSYSCALL	502
+#define	SYS_MAXSYSCALL	501
 #define	SYS_NSYSENT	512
 #endif /* _SYS_SYSCALL_H_ */

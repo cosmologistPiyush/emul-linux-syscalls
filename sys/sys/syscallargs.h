@@ -3356,23 +3356,12 @@ struct sys_lpathconf_args {
 };
 check_syscall_args(sys_lpathconf)
 
-struct sys_splicev_args {
-	syscallarg(int) fd_in;
-	syscallarg(int) PAD;
-	syscallarg(off_t) offset;
-	syscallarg(int) fd_out;
-	syscallarg(size_t) len;
-	syscallarg(struct spliceops *) ops;
-};
-check_syscall_args(sys_splicev)
-
 struct sys_splice_args {
 	syscallarg(int) fd_in;
 	syscallarg(off_t *) off_in;
 	syscallarg(int) fd_out;
 	syscallarg(off_t *) off_out;
 	syscallarg(size_t) nbytes;
-	syscallarg(int) flags;
 };
 check_syscall_args(sys_splice)
 
@@ -4299,8 +4288,6 @@ int	sys___acl_aclcheck_file(struct lwp *, const struct sys___acl_aclcheck_file_a
 int	sys___acl_aclcheck_fd(struct lwp *, const struct sys___acl_aclcheck_fd_args *, register_t *);
 
 int	sys_lpathconf(struct lwp *, const struct sys_lpathconf_args *, register_t *);
-
-int	sys_splicev(struct lwp *, const struct sys_splicev_args *, register_t *);
 
 int	sys_splice(struct lwp *, const struct sys_splice_args *, register_t *);
 

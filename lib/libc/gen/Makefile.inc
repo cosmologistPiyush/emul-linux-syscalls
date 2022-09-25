@@ -26,7 +26,7 @@ SRCS+=	alarm.c alphasort.c arc4random.c assert.c asysctl.c \
 	nlist_elf64.c opendir.c pause.c popen.c posix_spawn_sched.c \
 	posix_spawn_fileactions.c posix_spawnp.c psignal.c pthread_atfork.c \
 	ptree.c pwcache.c pw_scan.c raise.c randomid.c rb.c readdir.c \
-	rewinddir.c scandir.c seekdir.c setdomainname.c \
+	rewinddir.c scandir.c seekdir.c sendfile.c setdomainname.c \
 	sethostname.c setjmperr.c setmode.c setproctitle.c setprogname.c \
 	shquote.c shquotev.c sighold.c sigignore.c siginterrupt.c \
 	siglist.c signal.c signalname.c signalnext.c signalnumber.c \
@@ -79,7 +79,7 @@ MAN+=	alarm.3 arc4random.3 basename.3 bsd_signal.3 bswap.3 \
 	posix_spawnattr_getschedpolicy.3 posix_spawnattr_init.3 \
 	posix_spawnattr_getsigdefault.3 posix_spawnattr_getsigmask.3 \
 	psignal.3 pwcache.3 pthread_atfork.3 \
-	raise.3 randomid.3 realpath.3 scandir.3 setjmp.3 setmode.3 \
+	raise.3 randomid.3 realpath.3 scandir.3 sendfile.3 setjmp.3 setmode.3 \
 	setproctitle.3 shquote.3 sighold.3 sigignore.3 siginterrupt.3 \
 	signal.3 signalname.3 signbit.3 sigrelse.3 sigset.3 sigsetops.3 \
 	sleep.3 stringlist.3 sysconf.3 sysctl.3 syslog.3 \
